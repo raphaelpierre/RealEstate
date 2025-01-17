@@ -8,6 +8,9 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseCore
+import GoogleSignIn
+import GoogleSignInSwift
 
 @MainActor
 final class AuthManager: ObservableObject {
@@ -107,5 +110,49 @@ final class AuthManager: ObservableObject {
         try await db.collection("users").document(userId).updateData([
             "isAdmin": false
         ])
+    }
+    
+    func signInWithGoogle() async throws {
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw NSError(domain: "", code: -1, 
+                userInfo: [NSLocalizedDescriptionKey: "No client ID found"])
+        }
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
+            throw NSError(domain: "", code: -1, 
+                userInfo: [NSLocalizedDescriptionKey: "No root view controller found"])
+        }
+        
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+        guard let idToken = result.user.idToken?.tokenString else {
+            throw NSError(domain: "", code: -1, 
+                userInfo: [NSLocalizedDescriptionKey: "No ID token found"])
+        }
+        
+        let credential = GoogleAuthProvider.credential(
+            withIDToken: idToken,
+            accessToken: result.user.accessToken.tokenString
+        )
+        
+        let authResult = try await auth.signIn(with: credential)
+        
+        // Check if this is a new user
+        let userDoc = try? await db.collection("users").document(authResult.user.uid).getDocument()
+        if userDoc == nil || !userDoc!.exists {
+            // Create new user document
+            let user = User(
+                id: authResult.user.uid,
+                email: authResult.user.email ?? "",
+                displayName: authResult.user.displayName
+            )
+            try await db.collection("users").document(user.id).setData(user.toFirestoreData())
+        }
+        
+        await fetchUserData(userId: authResult.user.uid)
     }
 }

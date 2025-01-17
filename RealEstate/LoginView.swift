@@ -63,6 +63,32 @@ struct LoginView: View {
                 .cornerRadius(10)
                 .disabled(isLoading || email.isEmpty || password.isEmpty)
                 
+                // Google Sign In Button
+                Button(action: {
+                    Task {
+                        await handleGoogleSignIn()
+                    }
+                }) {
+                    HStack {
+                        Image("google_logo") // Make sure to add this to your assets
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                        Text("Continue with Google")
+                            .fontWeight(.medium)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.white)
+                .foregroundColor(.black)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+                .disabled(isLoading)
+                
                 Spacer()
                 
                 // Toggle Sign In/Up
@@ -105,6 +131,20 @@ struct LoginView: View {
             } else {
                 try await authManager.signIn(email: email, password: password)
             }
+            dismiss()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = error.localizedDescription
+            showingAlert = true
+        }
+    }
+    
+    private func handleGoogleSignIn() async {
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            try await authManager.signInWithGoogle()
             dismiss()
         } catch {
             alertTitle = "Error"
