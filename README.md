@@ -32,7 +32,8 @@ Swift 5.5+
 Firebase account
 
 Installation:
-Clone the repository git clone https://github.com/raphaelpierre/RealEstate.git 
+Clone the repository 
+git clone https://github.com/raphaelpierre/RealEstate.git 
 cd RealEstate
 Set up Firebase
 Create a new Firebase project
