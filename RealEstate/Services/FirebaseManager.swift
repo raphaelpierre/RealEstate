@@ -8,17 +8,24 @@
 import SwiftUI
 import FirebaseFirestore
 import FirebaseStorage
+import FirebaseCore
 
 class FirebaseManager: ObservableObject {
     static let shared = FirebaseManager()
     
     private let db = Firestore.firestore()
-    private let storage = Storage.storage()
+    private let storage: Storage
     
     @Published var properties: [Property] = []
     @Published var isAdmin = false // TODO: Replace with proper auth
     
-    private init() {}
+    private init() {
+        // Ensure Firebase is configured
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        storage = Storage.storage()
+    }
     
     func fetchProperties() async throws {
         let snapshot = try await db.collection("properties").getDocuments()
@@ -51,10 +58,41 @@ class FirebaseManager: ObservableObject {
     }
     
     func uploadImage(_ imageData: Data) async throws -> String {
-        let filename = UUID().uuidString
-        let storageRef = storage.reference().child("property_images/\(filename).jpg")
-        _ = try await storageRef.putDataAsync(imageData)
-        let downloadURL = try await storageRef.downloadURL()
-        return downloadURL.absoluteString
+        let filename = UUID().uuidString + ".jpg"
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        
+        do {
+            // Ensure the property_images directory exists
+            let storageRef = storage.reference()
+            let imagesRef = storageRef.child("property_images")
+            let imageRef = imagesRef.child(filename)
+            
+            print("Uploading to path: \(imageRef.fullPath)")
+            
+            // Upload the file
+            _ = try await imageRef.putDataAsync(imageData, metadata: metadata)
+            
+            // Get download URL
+            let downloadURL = try await imageRef.downloadURL()
+            print("Successfully uploaded image: \(downloadURL.absoluteString)")
+            return downloadURL.absoluteString
+            
+        } catch let error as NSError {
+            print("Detailed storage error: \(error)")
+            print("Error domain: \(error.domain)")
+            print("Error code: \(error.code)")
+            print("Error description: \(error.localizedDescription)")
+            print("Error user info: \(error.userInfo)")
+            
+            throw NSError(
+                domain: "FirebaseStorage",
+                code: error.code,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Failed to upload image: \(error.localizedDescription)",
+                    NSUnderlyingErrorKey: error
+                ]
+            )
+        }
     }
 }

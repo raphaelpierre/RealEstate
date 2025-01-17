@@ -69,17 +69,19 @@ struct LoginView: View {
                         await handleGoogleSignIn()
                     }
                 }) {
-                    HStack {
-                        Image("google_logo") // Make sure to add this to your assets
+                    HStack(spacing: 16) {
+                        Image("google_logo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 20, height: 20)
+                            .frame(width: 32, height: 32)
                         Text("Continue with Google")
+                            .font(.body)
                             .fontWeight(.medium)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding()
+                .padding(.vertical, 16)
+                .padding(.horizontal)
                 .background(Color.white)
                 .foregroundColor(.black)
                 .cornerRadius(10)

@@ -63,33 +63,18 @@ struct AdminPropertyFormView: View {
                         Label("Select Images", systemImage: "photo.stack")
                     }
                     
-                    // Show selected images
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(0..<selectedImageData.count, id: \.self) { index in
-                                if let uiImage = UIImage(data: selectedImageData[index]) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                        .overlay(
-                                            Button(action: {
-                                                selectedImageData.remove(at: index)
-                                                selectedItems.remove(at: index)
-                                            }) {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .foregroundColor(.white)
-                                                    .background(Color.black)
-                                                    .clipShape(Circle())
-                                            }
-                                            .padding(4),
-                                            alignment: .topTrailing
-                                        )
+                    if !selectedImageData.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 12) {
+                                ForEach(0..<selectedImageData.count, id: \.self) { index in
+                                    if let uiImage = UIImage(data: selectedImageData[index]) {
+                                        imagePreview(uiImage, index: index)
+                                    }
                                 }
                             }
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical)
+                        .frame(height: 120) // Fixed height for scroll view
                     }
                 }
             }
@@ -110,14 +95,7 @@ struct AdminPropertyFormView: View {
                 }
             }
             .onChange(of: selectedItems) { _ in
-                Task {
-                    selectedImageData.removeAll()
-                    for item in selectedItems {
-                        if let data = try? await item.loadTransferable(type: Data.self) {
-                            selectedImageData.append(data)
-                        }
-                    }
-                }
+                handleImageSelection()
             }
         }
         .alert("Error", isPresented: $showError) {
@@ -139,28 +117,111 @@ struct AdminPropertyFormView: View {
         }
     }
     
+    private func imagePreview(_ image: UIImage, index: Int) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            
+            Button(action: {
+                withAnimation {
+                    selectedImageData.remove(at: index)
+                    selectedItems.remove(at: index)
+                }
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.white)
+                    .background(Circle().fill(Color.black.opacity(0.5)))
+                    .padding(4)
+            }
+        }
+    }
+    
+    @MainActor
+    private func loadImage(from item: PhotosPickerItem) async throws -> Data {
+        guard let data = try await item.loadTransferable(type: Data.self) else {
+            throw NSError(domain: "ImageLoading", code: -1, 
+                userInfo: [NSLocalizedDescriptionKey: "Could not load image data"])
+        }
+        
+        // Validate and compress image data
+        guard let uiImage = UIImage(data: data),
+              let compressedData = uiImage.jpegData(compressionQuality: 0.7) else {
+            throw NSError(domain: "ImageLoading", code: -2, 
+                userInfo: [NSLocalizedDescriptionKey: "Invalid image data"])
+        }
+        
+        return compressedData
+    }
+    
+    private func handleImageSelection() {
+        Task {
+            do {
+                selectedImageData.removeAll()
+                
+                for item in selectedItems {
+                    do {
+                        let imageData = try await loadImage(from: item)
+                        selectedImageData.append(imageData)
+                    } catch {
+                        print("Error loading image: \(error)")
+                    }
+                }
+            } catch {
+                showError = true
+                errorMessage = "Failed to load images: \(error.localizedDescription)"
+            }
+        }
+    }
+    
     private func saveProperty() async {
         isLoading = true
         defer { isLoading = false }
         
+        // Validate numeric fields
+        guard let priceValue = Double(price.replacingOccurrences(of: ",", with: ".")),
+              let bedroomsValue = Int(bedrooms),
+              let bathroomsValue = Int(bathrooms),
+              let areaValue = Double(area.replacingOccurrences(of: ",", with: ".")) else {
+            showError = true
+            errorMessage = "Please enter valid numbers for price, bedrooms, bathrooms, and area"
+            return
+        }
+        
         do {
             // Upload images first
             var imageURLs: [String] = []
-            for imageData in selectedImageData {
-                let url = try await firebaseManager.uploadImage(imageData)
-                imageURLs.append(url)
+            
+            // If editing, keep existing images
+            if let existingProperty = property {
+                imageURLs = existingProperty.imageURLs
             }
             
-            // Create or update property
+            // Upload new images
+            for (index, imageData) in selectedImageData.enumerated() {
+                do {
+                    let url = try await firebaseManager.uploadImage(imageData)
+                    imageURLs.append(url)
+                } catch {
+                    print("Error uploading image \(index + 1): \(error)")
+                    showError = true
+                    errorMessage = "Failed to upload image \(index + 1). Please try again."
+                    return
+                }
+            }
+            
+            // Create or update property with validated values
             let newProperty = Property(
                 id: property?.id ?? UUID().uuidString,
                 title: title,
-                price: Double(price) ?? 0,
+                price: priceValue,
                 description: description,
                 address: address,
-                bedrooms: Int(bedrooms) ?? 0,
-                bathrooms: Int(bathrooms) ?? 0,
-                area: Double(area) ?? 0,
+                bedrooms: bedroomsValue,
+                bathrooms: bathroomsValue,
+                area: areaValue,
                 imageURLs: imageURLs
             )
             
@@ -172,8 +233,9 @@ struct AdminPropertyFormView: View {
             
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            print("Error saving property: \(error)")
             showError = true
+            errorMessage = "Failed to save property: \(error.localizedDescription)"
         }
     }
 }
