@@ -8,17 +8,46 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var firebaseManager = FirebaseManager.shared
+    @StateObject private var authManager = AuthManager.shared
+    @State private var showingAdminView = false
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            LandingView()
+                .environmentObject(firebaseManager)
+                .environmentObject(authManager)
+                .toolbar {
+                    if authManager.isAuthenticated {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            HStack {
+                                if authManager.isAdmin {
+                                    Button {
+                                        showingAdminView = true
+                                    } label: {
+                                        Image(systemName: "gear")
+                                    }
+                                }
+                                
+                                Button {
+                                    try? authManager.signOut()
+                                } label: {
+                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                }
+                            }
+                        }
+                    }
+                }
+                .sheet(isPresented: $showingAdminView) {
+                    AdminView()
+                        .environmentObject(firebaseManager)
+                }
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
