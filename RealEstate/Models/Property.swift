@@ -14,18 +14,25 @@ struct Property: Identifiable, Codable, Equatable {
     var price: Double
     var description: String
     var address: String
+    var zipCode: String
+    var city: String
+    var country: String
     var bedrooms: Int
     var bathrooms: Int
     var area: Double
     var imageURLs: [String]
     var createdAt: Date
     var updatedAt: Date
+    var isFavorite: Bool = false
     
     init(id: String = UUID().uuidString,
          title: String,
          price: Double,
          description: String,
          address: String,
+         zipCode: String = "",
+         city: String = "",
+         country: String = "",
          bedrooms: Int,
          bathrooms: Int,
          area: Double,
@@ -37,6 +44,9 @@ struct Property: Identifiable, Codable, Equatable {
         self.price = price
         self.description = description
         self.address = address
+        self.zipCode = zipCode
+        self.city = city
+        self.country = country
         self.bedrooms = bedrooms
         self.bathrooms = bathrooms
         self.area = area
@@ -52,6 +62,9 @@ struct Property: Identifiable, Codable, Equatable {
                lhs.price == rhs.price &&
                lhs.description == rhs.description &&
                lhs.address == rhs.address &&
+               lhs.zipCode == rhs.zipCode &&
+               lhs.city == rhs.city &&
+               lhs.country == rhs.country &&
                lhs.bedrooms == rhs.bedrooms &&
                lhs.bathrooms == rhs.bathrooms &&
                lhs.area == rhs.area &&
@@ -69,6 +82,9 @@ struct Property: Identifiable, Codable, Equatable {
             price: data["price"] as? Double ?? 0.0,
             description: data["description"] as? String ?? "",
             address: data["address"] as? String ?? "",
+            zipCode: data["zipCode"] as? String ?? "",
+            city: data["city"] as? String ?? "",
+            country: data["country"] as? String ?? "",
             bedrooms: data["bedrooms"] as? Int ?? 0,
             bathrooms: data["bathrooms"] as? Int ?? 0,
             area: data["area"] as? Double ?? 0.0,
@@ -84,6 +100,9 @@ struct Property: Identifiable, Codable, Equatable {
             "price": price,
             "description": description,
             "address": address,
+            "zipCode": zipCode,
+            "city": city,
+            "country": country,
             "bedrooms": bedrooms,
             "bathrooms": bathrooms,
             "area": area,
@@ -92,4 +111,21 @@ struct Property: Identifiable, Codable, Equatable {
             "updatedAt": Timestamp(date: updatedAt)
         ]
     }
+}
+
+// MARK: - Preview Helper
+extension Property {
+    static let example = Property(
+        title: "Luxury Villa with Ocean View",
+        price: 1250000,
+        description: "Beautiful luxury villa with panoramic ocean views, featuring modern amenities and elegant design.",
+        address: "123 Ocean Drive",
+        zipCode: "90210",
+        city: "Malibu",
+        country: "United States",
+        bedrooms: 4,
+        bathrooms: 3,
+        area: 3500,
+        imageURLs: []
+    )
 }
