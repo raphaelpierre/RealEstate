@@ -13,99 +13,168 @@ struct LoginView: View {
     @EnvironmentObject private var authManager: AuthManager
     @State private var email = ""
     @State private var password = ""
+    @State private var confirmPassword = ""
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var isRegistering = false
+    
+    private var isFormValid: Bool {
+        if isRegistering {
+            return !email.isEmpty && !password.isEmpty && !confirmPassword.isEmpty &&
+                   password == confirmPassword && password.count >= 6
+        } else {
+            return !email.isEmpty && !password.isEmpty
+        }
+    }
     
     var body: some View {
         ZStack {
             Theme.backgroundBlack
                 .ignoresSafeArea()
             
-            VStack(spacing: Theme.padding * 2) {
-                // Logo or App Name
-                VStack(spacing: Theme.smallPadding) {
-                    Text("Real Estate")
-                        .font(Theme.Typography.titleLarge)
-                        .foregroundColor(Theme.textWhite)
-                    Text("Find your dream home")
-                        .font(Theme.Typography.body)
-                        .foregroundColor(Theme.textWhite.opacity(0.8))
-                }
-                .padding(.top, 60)
-                
-                // Login Form
-                VStack(spacing: Theme.padding) {
-                    // Email Field
-                    TextFormField(
-                        label: "Email",
-                        placeholder: "Email",
-                        text: $email
-                    )
-                    
-                    // Password Field
-                    TextFormField(
-                        label: "Password",
-                        placeholder: "Password",
-                        text: $password,
-                        isSecure: true
-                    )
-                    
-                    // Login Button
-                    Button {
-                        Task {
-                            await login()
-                        }
-                    } label: {
-                        HStack {
-                            if isLoading {
-                                ProgressView()
-                                    .tint(Theme.textWhite)
-                            } else {
-                                Text("Login")
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
+            ScrollView {
+                VStack(spacing: Theme.padding * 2) {
+                    // Logo or App Name
+                    VStack(spacing: Theme.smallPadding) {
+                        Text("Real Estate")
+                            .font(Theme.Typography.titleLarge)
+                            .foregroundColor(Theme.textWhite)
+                        Text(isRegistering ? "Create your account" : "Find your dream home")
+                            .font(Theme.Typography.body)
+                            .foregroundColor(Theme.textWhite.opacity(0.8))
                     }
-                    .primaryButton()
-                    .disabled(isLoading)
+                    .padding(.top, 60)
+                    
+                    // Login/Register Form
+                    VStack(spacing: Theme.padding) {
+                        // Email Field
+                        TextFormField(
+                            label: "Email",
+                            placeholder: "Email",
+                            text: $email
+                        )
+                        
+                        // Password Field
+                        TextFormField(
+                            label: "Password",
+                            placeholder: "Password",
+                            text: $password,
+                            isSecure: true
+                        )
+                        
+                        // Confirm Password Field (Registration only)
+                        if isRegistering {
+                            TextFormField(
+                                label: "Confirm Password",
+                                placeholder: "Confirm Password",
+                                text: $confirmPassword,
+                                isSecure: true
+                            )
+                        }
+                        
+                        // Login/Register Button
+                        Button {
+                            Task {
+                                if isRegistering {
+                                    await register()
+                                } else {
+                                    await login()
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                if isLoading {
+                                    ProgressView()
+                                        .tint(Theme.textWhite)
+                                } else {
+                                    Text(isRegistering ? "Create Account" : "Login")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                        }
+                        .primaryButton()
+                        .disabled(!isFormValid || isLoading)
+                        
+                        // Toggle Login/Register
+                        Button {
+                            withAnimation {
+                                isRegistering.toggle()
+                                // Clear fields when switching modes
+                                password = ""
+                                confirmPassword = ""
+                                errorMessage = ""
+                                showError = false
+                            }
+                        } label: {
+                            Text(isRegistering ? "Already have an account? Sign In" : "Don't have an account? Sign Up")
+                                .foregroundColor(Theme.primaryRed)
+                        }
+                    }
+                    .padding(.horizontal, Theme.padding)
+                    
+                    if !isRegistering {
+                        // Divider
+                        HStack {
+                            Rectangle()
+                                .frame(height: 1)
+                                .foregroundColor(Theme.textWhite.opacity(0.2))
+                            Text("or")
+                                .font(Theme.Typography.caption)
+                                .foregroundColor(Theme.textWhite.opacity(0.8))
+                            Rectangle()
+                                .frame(height: 1)
+                                .foregroundColor(Theme.textWhite.opacity(0.2))
+                        }
+                        .padding(.horizontal, Theme.padding)
+                        
+                        // Custom Google Sign In button
+                        Button {
+                            signInWithGoogle()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image("google_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                
+                                Text("Sign in with Google")
+                                    .font(Theme.Typography.body)
+                                    .foregroundColor(Theme.textWhite)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Theme.cardBackground)
+                            .cornerRadius(Theme.cornerRadius)
+                        }
+                        .padding(.horizontal, Theme.padding)
+                    }
+                    
+                    Spacer()
                 }
-                .padding(.horizontal, Theme.padding)
-                
-                // Divider
-                HStack {
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(Theme.textWhite.opacity(0.2))
-                    Text("or")
-                        .font(Theme.Typography.caption)
-                        .foregroundColor(Theme.textWhite.opacity(0.8))
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(Theme.textWhite.opacity(0.2))
-                }
-                .padding(.horizontal, Theme.padding)
-                
-                // Google Sign In
-                GoogleSignInButton(scheme: .dark, style: .wide) {
-                    signInWithGoogle()
-                }
-                .frame(height: 50)
-                .cornerRadius(Theme.cornerRadius)
-                .padding(.horizontal, Theme.padding)
-                
-                Spacer()
             }
         }
         .alert("Error", isPresented: $showError) {
-            Button("OK") { showError = false }
+            Button("OK") { }
         } message: {
             Text(errorMessage)
         }
     }
     
-    private func login() {
+    private func register() async {
+        isLoading = true
+        do {
+            try await authManager.signUp(email: email, password: password)
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+        }
+        isLoading = false
+    }
+    
+    private func login() async {
         guard !email.isEmpty, !password.isEmpty else {
             errorMessage = "Please fill in all fields"
             showError = true
@@ -113,16 +182,14 @@ struct LoginView: View {
         }
         
         isLoading = true
-        Task {
-            do {
-                try await authManager.signIn(email: email, password: password)
-                dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
-                showError = true
-            }
-            isLoading = false
+        do {
+            try await authManager.signIn(email: email, password: password)
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
         }
+        isLoading = false
     }
     
     private func signInWithGoogle() {

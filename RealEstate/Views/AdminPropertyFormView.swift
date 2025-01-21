@@ -18,7 +18,7 @@ struct AdminPropertyFormView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isLoading = false
-    @State private var isUploadingImages = false
+    @State private var isProcessingImages = false
     @State private var currentStep = 0
     @State private var showImagePicker = false
     @State private var price: Double
@@ -31,18 +31,32 @@ struct AdminPropertyFormView: View {
     @State private var city: String
     @State private var zipCode: String
     @State private var country: String
+    @State private var selectedType: PropertyType
+    @State private var selectedPurpose: PropertyPurpose
     @State private var selectedImages: [PhotosPickerItem] = []
     @State private var imageURLs: [String]
     @State private var newImageData: [Data] = []
+    @State private var contactWhatsapp: String = ""
     
     private let maxImages = 10
-    private let steps = ["Basic Info", "Location", "Details", "Photos"]
+    private let steps = ["Basic Info", "Location", "Details", "Photos", "Contact"]
+    
+    private var isFormValid: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        price > 0 &&
+        bedrooms > 0 &&
+        bathrooms > 0 &&
+        area > 0 &&
+        !selectedType.rawValue.isEmpty &&
+        !selectedPurpose.rawValue.isEmpty
+    }
     
     init(property: Property?) {
         self.property = property
         
         // Initialize state variables with existing property data if available
-        _isLoading = State(initialValue: property != nil)
         _title = State(initialValue: property?.title ?? "")
         _description = State(initialValue: property?.description ?? "")
         _price = State(initialValue: property?.price ?? 0.0)
@@ -53,7 +67,13 @@ struct AdminPropertyFormView: View {
         _city = State(initialValue: property?.city ?? "")
         _zipCode = State(initialValue: property?.zipCode ?? "")
         _country = State(initialValue: property?.country ?? "")
+        _selectedType = State(initialValue: PropertyType(rawValue: property?.type ?? "") ?? .house)
+        _selectedPurpose = State(initialValue: PropertyPurpose(rawValue: property?.purpose ?? "") ?? .buy)
         _imageURLs = State(initialValue: property?.imageURLs ?? [])
+        _isLoading = State(initialValue: false)
+        
+        // Initialize contactWhatsapp from property's contact
+        _contactWhatsapp = State(initialValue: property?.contact.whatsapp ?? "")
     }
     
     var body: some View {
@@ -106,6 +126,42 @@ struct AdminPropertyFormView: View {
                                     text: $title,
                                     icon: "house.fill"
                                 )
+                                
+                                // Property Type Picker
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Image(systemName: "building.fill")
+                                            .foregroundColor(Theme.textWhite)
+                                        Text("Property Type")
+                                            .foregroundColor(Theme.textWhite)
+                                    }
+                                    
+                                    Picker("Property Type", selection: $selectedType) {
+                                        ForEach(PropertyType.allCases.filter { $0 != .all }, id: \.self) { type in
+                                            Text(type.rawValue)
+                                                .tag(type)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                
+                                // Property Purpose Picker
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Image(systemName: "tag.fill")
+                                            .foregroundColor(Theme.textWhite)
+                                        Text("Purpose")
+                                            .foregroundColor(Theme.textWhite)
+                                    }
+                                    
+                                    Picker("Purpose", selection: $selectedPurpose) {
+                                        ForEach(PropertyPurpose.allCases.filter { $0 != .all }, id: \.self) { purpose in
+                                            Text(purpose.rawValue)
+                                                .tag(purpose)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
                                 
                                 TextFormField(
                                     label: "Description",
@@ -195,25 +251,23 @@ struct AdminPropertyFormView: View {
                                     Text("\(imageURLs.count + newImageData.count)/\(maxImages) photos")
                                         .foregroundColor(Theme.textWhite)
                                     Spacer()
-                                    PhotosPicker(
-                                        selection: $selectedImages,
-                                        maxSelectionCount: maxImages - (imageURLs.count + newImageData.count),
-                                        matching: .images,
-                                        photoLibrary: .shared()
-                                    ) {
-                                        Label("Add Photos", systemImage: "plus.circle.fill")
-                                            .foregroundColor(Theme.primaryRed)
+                                    if imageURLs.count + newImageData.count < maxImages {
+                                        PhotosPicker(
+                                            selection: $selectedImages,
+                                            maxSelectionCount: maxImages - (imageURLs.count + newImageData.count),
+                                            matching: .images
+                                        ) {
+                                            Label("Add Photos", systemImage: "plus.circle.fill")
+                                                .foregroundColor(Theme.primaryRed)
+                                        }
                                     }
-                                    .disabled(imageURLs.count + newImageData.count >= maxImages)
                                 }
                                 
-                                if isUploadingImages {
-                                    ProgressView("Uploading images...")
+                                if isProcessingImages {
+                                    ProgressView("Processing images...")
                                         .tint(Theme.primaryRed)
-                                        .foregroundColor(Theme.textWhite)
                                 }
                                 
-                                // Image Grid
                                 LazyVGrid(columns: [
                                     GridItem(.flexible()),
                                     GridItem(.flexible()),
@@ -226,54 +280,52 @@ struct AdminPropertyFormView: View {
                                                 switch phase {
                                                 case .empty:
                                                     ProgressView()
-                                                        .frame(height: 120)
+                                                        .tint(Theme.primaryRed)
                                                 case .success(let image):
                                                     image
                                                         .resizable()
-                                                        .scaledToFill()
-                                                        .frame(height: 120)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                        .aspectRatio(contentMode: .fill)
                                                 case .failure:
-                                                    Image(systemName: "exclamationmark.triangle.fill")
-                                                        .foregroundColor(.red)
-                                                        .frame(height: 120)
+                                                    Image(systemName: "photo.fill")
+                                                        .foregroundColor(Theme.textWhite)
                                                 @unknown default:
                                                     EmptyView()
                                                 }
                                             }
-                                            .frame(maxWidth: .infinity)
                                             .frame(height: 120)
+                                            .frame(maxWidth: .infinity)
+                                            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
                                             
                                             Button {
                                                 imageURLs.removeAll { $0 == imageURL }
                                             } label: {
                                                 Image(systemName: "xmark.circle.fill")
                                                     .foregroundColor(.red)
-                                                    .background(Circle().fill(.white))
-                                                    .padding(4)
+                                                    .background(Circle().fill(Color.white))
                                             }
+                                            .padding(4)
                                         }
                                     }
                                     
-                                    // Show newly selected images
+                                    // Show new images
                                     ForEach(newImageData.indices, id: \.self) { index in
-                                        ZStack(alignment: .topTrailing) {
-                                            if let uiImage = UIImage(data: newImageData[index]) {
+                                        if let uiImage = UIImage(data: newImageData[index]) {
+                                            ZStack(alignment: .topTrailing) {
                                                 Image(uiImage: uiImage)
                                                     .resizable()
-                                                    .scaledToFill()
+                                                    .aspectRatio(contentMode: .fill)
                                                     .frame(height: 120)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                                                     .frame(maxWidth: .infinity)
-                                            }
-                                            
-                                            Button {
-                                                newImageData.remove(at: index)
-                                            } label: {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .foregroundColor(.red)
-                                                    .background(Circle().fill(.white))
-                                                    .padding(4)
+                                                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                                                
+                                                Button {
+                                                    newImageData.remove(at: index)
+                                                } label: {
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .foregroundColor(.red)
+                                                        .background(Circle().fill(Color.white))
+                                                }
+                                                .padding(4)
                                             }
                                         }
                                     }
@@ -282,6 +334,15 @@ struct AdminPropertyFormView: View {
                             .padding()
                         }
                         .tag(3)
+                        
+                        // Contact
+                        ScrollView {
+                            VStack(spacing: 24) {
+                                whatsAppContactField()
+                            }
+                            .padding()
+                        }
+                        .tag(4)
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
                     
@@ -323,19 +384,11 @@ struct AdminPropertyFormView: View {
                                     await saveProperty()
                                 }
                             } label: {
-                                HStack {
-                                    if isLoading {
-                                        ProgressView()
-                                            .tint(Theme.textWhite)
-                                    } else {
-                                        Text(property == nil ? "Add Property" : "Save Changes")
-                                    }
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
+                                Text("Save Property")
+                                    .foregroundColor(Theme.textWhite)
                             }
                             .primaryButton()
-                            .disabled(isLoading || true)
+                            .disabled(false)
                         }
                     }
                     .padding(.horizontal, 24)
@@ -378,34 +431,83 @@ struct AdminPropertyFormView: View {
         .task {
             await loadPropertyData()
         }
-        .onChange(of: selectedImages) { items in
+        .onChange(of: selectedImages) { oldValue, newValue in
             Task {
-                isUploadingImages = true
+                isProcessingImages = true
                 
                 do {
                     var newData: [Data] = []
-                    for item in items {
-                        if let data = try await item.loadTransferable(type: Data.self),
-                           let uiImage = UIImage(data: data),
-                           let compressedData = uiImage.jpegData(compressionQuality: 0.7) {
-                            newData.append(compressedData)
+                    for item in newValue {
+                        if let data = try await item.loadTransferable(type: Data.self) {
+                            // Resize and compress image
+                            if let uiImage = UIImage(data: data) {
+                                let maxDimension: CGFloat = 1200 // Maximum dimension for either width or height
+                                let scale = min(maxDimension / uiImage.size.width, maxDimension / uiImage.size.height, 1.0)
+                                let newSize = CGSize(width: uiImage.size.width * scale, height: uiImage.size.height * scale)
+                                
+                                let renderer = UIGraphicsImageRenderer(size: newSize)
+                                let resizedImage = renderer.image { context in
+                                    uiImage.draw(in: CGRect(origin: .zero, size: newSize))
+                                }
+                                
+                                if let compressedData = resizedImage.jpegData(compressionQuality: 0.7) {
+                                    newData.append(compressedData)
+                                }
+                            }
                         }
                     }
+                    
                     await MainActor.run {
-                        newImageData = newData
+                        newImageData.append(contentsOf: newData)
                         selectedImages.removeAll()
+                        isProcessingImages = false
                     }
                 } catch {
+                    print("Error processing images: \(error)")
                     await MainActor.run {
                         showError = true
-                        errorMessage = "Failed to load images: \(error.localizedDescription)"
+                        errorMessage = "Failed to process images: \(error.localizedDescription)"
+                        isProcessingImages = false
                     }
                 }
-                
-                await MainActor.run {
-                    isUploadingImages = false
-                }
             }
+        }
+    }
+    
+    private func whatsAppContactField() -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("WhatsApp")
+                .font(.caption)
+                .foregroundColor(Theme.textWhite.opacity(0.7))
+            
+            HStack {
+                // WhatsApp-specific icon with brand color
+                Image("whatsapp_icon") // Assumes you'll add a WhatsApp icon to Assets
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(Color(red: 37/255, green: 211/255, blue: 102/255)) // WhatsApp green
+                
+                TextField("", text: $contactWhatsapp)
+                    .keyboardType(.phonePad)
+                    .foregroundColor(Theme.textWhite)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .placeholder(when: contactWhatsapp.isEmpty) {
+                        Text("e.g. +1234567890")
+                            .foregroundColor(Theme.textWhite.opacity(0.5))
+                    }
+            }
+            .padding(12)
+            .background(Theme.cardBackground)
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(contactWhatsapp.isEmpty ? Color.clear : 
+                            (ContactInfo(whatsapp: contactWhatsapp).isValidWhatsApp() ? 
+                             Color.green : Color.red), 
+                     lineWidth: 2)
+            )
         }
     }
     
@@ -419,74 +521,91 @@ struct AdminPropertyFormView: View {
                 title = updatedProperty.title
                 description = updatedProperty.description
                 price = updatedProperty.price
+                address = updatedProperty.address
+                zipCode = updatedProperty.zipCode
+                city = updatedProperty.city
+                country = updatedProperty.country
                 bedrooms = updatedProperty.bedrooms
                 bathrooms = updatedProperty.bathrooms
                 area = updatedProperty.area
-                address = updatedProperty.address
-                city = updatedProperty.city
-                zipCode = updatedProperty.zipCode
-                country = updatedProperty.country
+                selectedType = PropertyType(rawValue: updatedProperty.type) ?? .house
+                selectedPurpose = PropertyPurpose(rawValue: updatedProperty.purpose) ?? .buy
                 imageURLs = updatedProperty.imageURLs
+                contactWhatsapp = updatedProperty.contact.whatsapp
                 isLoading = false
             }
         } catch {
             await MainActor.run {
-                showError = true
-                errorMessage = "Failed to load property data: \(error.localizedDescription)"
+                print("Error loading property data: \(error)")
                 isLoading = false
-                dismiss()
             }
         }
     }
     
     private func saveProperty() async {
         isLoading = true
-        defer { isLoading = false }
         
         do {
             // First upload any new images
-            isUploadingImages = true
             var updatedImageURLs = imageURLs
             
-            for imageData in newImageData {
-                do {
-                    let imageURL = try await firebaseManager.uploadImage(imageData)
-                    updatedImageURLs.append(imageURL)
-                } catch {
-                    print("Failed to upload image: \(error)")
-                    throw error
+            // Use concurrency to upload images in parallel
+            let newImageURLs = try await withThrowingTaskGroup(of: String.self) { group in
+                for imageData in newImageData {
+                    group.addTask {
+                        return try await self.firebaseManager.uploadImage(imageData)
+                    }
                 }
+                
+                var uploadedURLs: [String] = []
+                for try await imageURL in group {
+                    uploadedURLs.append(imageURL)
+                }
+                return uploadedURLs
             }
             
-            isUploadingImages = false
+            updatedImageURLs.append(contentsOf: newImageURLs)
             
-            let updatedProperty = Property(
+            // Create property object
+            let propertyToSave = Property(
                 id: property?.id ?? UUID().uuidString,
-                title: title,
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 price: price,
-                description: description,
-                address: address,
-                zipCode: zipCode,
-                city: city,
-                country: country,
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+                address: address.trimmingCharacters(in: .whitespacesAndNewlines),
+                contact: ContactInfo(
+                    whatsapp: contactWhatsapp.trimmingCharacters(in: .whitespacesAndNewlines)
+                ),
+                zipCode: zipCode.trimmingCharacters(in: .whitespacesAndNewlines),
+                city: city.trimmingCharacters(in: .whitespacesAndNewlines),
+                country: country.trimmingCharacters(in: .whitespacesAndNewlines),
                 bedrooms: bedrooms,
                 bathrooms: bathrooms,
                 area: area,
+                type: selectedType.rawValue,
+                purpose: selectedPurpose.rawValue,
                 imageURLs: updatedImageURLs,
                 createdAt: property?.createdAt ?? Date(),
                 updatedAt: Date()
             )
             
             if property != nil {
-                try await firebaseManager.updateProperty(updatedProperty)
+                try await firebaseManager.updateProperty(propertyToSave)
             } else {
-                try await firebaseManager.addProperty(updatedProperty)
+                try await firebaseManager.addProperty(propertyToSave)
             }
             
-            dismiss()
+            await MainActor.run {
+                isLoading = false
+                dismiss()
+            }
         } catch {
-            showError = true
-            errorMessage = error.localizedDescription
+            // Comprehensive error handling
+            await MainActor.run {
+                isLoading = false
+                print("Error saving property: \(error.localizedDescription)")
+                // Optionally show an error alert to the user
+            }
         }
     }
 }
@@ -497,6 +616,19 @@ struct AdminPropertyFormView_Previews: PreviewProvider {
         NavigationView {
             AdminPropertyFormView(property: Property.example)
                 .environmentObject(FirebaseManager.shared)
+        }
+    }
+}
+
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder then: () -> Content
+    ) -> some View {
+        ZStack(alignment: alignment) {
+            then().opacity(shouldShow ? 1 : 0)
+            self
         }
     }
 }

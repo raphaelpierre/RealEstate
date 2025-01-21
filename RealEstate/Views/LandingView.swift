@@ -23,19 +23,101 @@ enum PriceRange: String, CaseIterable {
     }
 }
 
+enum PropertyType: String, CaseIterable {
+    case all = "All Types"
+    case house = "House"
+    case apartment = "Apartment"
+    case villa = "Villa"
+    case land = "Land"
+}
+
+enum PropertyPurpose: String, CaseIterable {
+    case all = "All Purpose"
+    case buy = "Buy"
+    case rent = "Rent"
+}
+
+enum AreaRange: String, CaseIterable {
+    case all = "Any Size"
+    case small = "< 100m²"
+    case medium = "100-200m²"
+    case large = "200-500m²"
+    case xlarge = "> 500m²"
+    
+    var range: ClosedRange<Double>? {
+        switch self {
+        case .all: return nil
+        case .small: return 0...100
+        case .medium: return 100...200
+        case .large: return 200...500
+        case .xlarge: return 500...Double.infinity
+        }
+    }
+}
+
 struct LandingView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
     @EnvironmentObject private var authManager: AuthManager
     @State private var showingLoginSheet = false
     @State private var selectedPriceRange: PriceRange = .all
+    @State private var selectedPropertyType: PropertyType = .all
+    @State private var selectedPurpose: PropertyPurpose = .all
+    @State private var selectedAreaRange: AreaRange = .all
     @State private var selectedBedrooms: Int?
     @State private var showingFilters = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var searchText = ""
+    
+    private func applyPriceFilter(_ properties: [Property]) -> [Property] {
+        guard let priceRange = selectedPriceRange.range else { return properties }
+        return properties.filter { priceRange.contains($0.price) }
+    }
+    
+    private func applyAreaFilter(_ properties: [Property]) -> [Property] {
+        guard let areaRange = selectedAreaRange.range else { return properties }
+        return properties.filter { areaRange.contains($0.area) }
+    }
+    
+    private func applyBedroomsFilter(_ properties: [Property]) -> [Property] {
+        guard let bedrooms = selectedBedrooms else { return properties }
+        return properties.filter { $0.bedrooms == bedrooms }
+    }
+    
+    private func applyTypeFilter(_ properties: [Property]) -> [Property] {
+        guard selectedPropertyType != .all else { return properties }
+        return properties.filter { $0.type == selectedPropertyType.rawValue }
+    }
+    
+    private func applyPurposeFilter(_ properties: [Property]) -> [Property] {
+        guard selectedPurpose != .all else { return properties }
+        return properties.filter { $0.purpose == selectedPurpose.rawValue }
+    }
+    
+    private func applySearchFilter(_ properties: [Property]) -> [Property] {
+        guard !searchText.isEmpty else { return properties }
+        return properties.filter {
+            $0.title.localizedCaseInsensitiveContains(searchText) ||
+            $0.description.localizedCaseInsensitiveContains(searchText) ||
+            $0.address.localizedCaseInsensitiveContains(searchText) ||
+            $0.city.localizedCaseInsensitiveContains(searchText) ||
+            $0.country.localizedCaseInsensitiveContains(searchText) ||
+            $0.zipCode.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    private func applyAllFilters(_ properties: [Property]) -> [Property] {
+        let step1 = applyPriceFilter(properties)
+        let step2 = applyAreaFilter(step1)
+        let step3 = applyBedroomsFilter(step2)
+        let step4 = applyTypeFilter(step3)
+        let step5 = applyPurposeFilter(step4)
+        let step6 = applySearchFilter(step5)
+        return step6
+    }
     
     var filteredProperties: [Property] {
-        let filtered = filterByPrice(properties: firebaseManager.properties)
-        return filterByBedrooms(properties: filtered)
+        applyAllFilters(firebaseManager.properties)
     }
     
     private func filterByPrice(properties: [Property]) -> [Property] {
@@ -48,85 +130,130 @@ struct LandingView: View {
         return properties.filter { $0.bedrooms == bedrooms }
     }
     
+    private struct SearchBarView: View {
+        @Binding var searchText: String
+        
+        var body: some View {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(Theme.textWhite.opacity(0.6))
+                TextField("Search properties...", text: $searchText)
+                    .foregroundColor(Theme.textWhite)
+                    .accentColor(Theme.primaryRed)
+                
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(Theme.textWhite.opacity(0.6))
+                    }
+                }
+            }
+            .padding()
+            .background(Color.black.opacity(0.3))
+            .cornerRadius(10)
+        }
+    }
+    
+    private struct FiltersView: View {
+        @Binding var selectedPropertyType: PropertyType
+        @Binding var selectedPurpose: PropertyPurpose
+        @Binding var selectedBedrooms: Int?
+        @Binding var showingFilters: Bool
+        
+        var body: some View {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // Property Type Filter
+                    Menu {
+                        ForEach(PropertyType.allCases, id: \.self) { type in
+                            Button {
+                                selectedPropertyType = type
+                            } label: {
+                                HStack {
+                                    Text(type.rawValue)
+                                    if selectedPropertyType == type {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(selectedPropertyType.rawValue)
+                            Image(systemName: "chevron.down")
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Theme.cardBackground)
+                        .cornerRadius(Theme.cornerRadius)
+                    }
+                    
+                    // Purpose Filter
+                    Menu {
+                        ForEach(PropertyPurpose.allCases, id: \.self) { purpose in
+                            Button {
+                                selectedPurpose = purpose
+                            } label: {
+                                HStack {
+                                    Text(purpose.rawValue)
+                                    if selectedPurpose == purpose {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(selectedPurpose.rawValue)
+                            Image(systemName: "chevron.down")
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Theme.cardBackground)
+                        .cornerRadius(Theme.cornerRadius)
+                    }
+                    
+                    // More Filters Button
+                    Button {
+                        showingFilters = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "slider.horizontal.3")
+                            Text("More Filters")
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Theme.cardBackground)
+                        .cornerRadius(Theme.cornerRadius)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+    
     var body: some View {
         ZStack {
             Theme.backgroundBlack
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Fixed Hero Section with Filter Bar
-                VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        Text("Filter by:")
-                            .foregroundColor(Theme.textWhite)
-                            .font(.system(size: 14, weight: .medium))
-                        
-                        Menu {
-                            ForEach(PriceRange.allCases, id: \.self) { range in
-                                Button {
-                                    selectedPriceRange = range
-                                } label: {
-                                    HStack {
-                                        Text(range.rawValue)
-                                        if selectedPriceRange == range {
-                                            Image(systemName: "checkmark")
-                                        }
-                                    }
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Text(selectedPriceRange.rawValue)
-                                Image(systemName: "chevron.down")
-                            }
-                            .foregroundColor(Theme.textWhite)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(6)
-                        }
-                        
-                        Menu {
-                            Button {
-                                selectedBedrooms = nil
-                            } label: {
-                                HStack {
-                                    Text("Any")
-                                    if selectedBedrooms == nil {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                            ForEach(1...5, id: \.self) { count in
-                                Button {
-                                    selectedBedrooms = count
-                                } label: {
-                                    HStack {
-                                        Text("\(count) \(count == 1 ? "Bedroom" : "Bedrooms")")
-                                        if selectedBedrooms == count {
-                                            Image(systemName: "checkmark")
-                                        }
-                                    }
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Text(selectedBedrooms.map { "\($0) \($0 == 1 ? "Bedroom" : "Bedrooms")" } ?? "Bedrooms")
-                                Image(systemName: "chevron.down")
-                            }
-                            .foregroundColor(Theme.textWhite)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(6)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 10)
+                // Fixed Hero Section with Search and Filter Bar
+                VStack(spacing: 16) {
+                    SearchBarView(searchText: $searchText)
+                        .padding(.horizontal)
+                    
+                    FiltersView(
+                        selectedPropertyType: $selectedPropertyType,
+                        selectedPurpose: $selectedPurpose,
+                        selectedBedrooms: $selectedBedrooms,
+                        showingFilters: $showingFilters
+                    )
                 }
-                .background(Color.black)
+                .padding(.vertical)
+                .background(Theme.backgroundBlack)
                 .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
                 
                 // Scrollable Content
@@ -169,7 +296,13 @@ struct LandingView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .sheet(isPresented: $showingFilters) {
-            FilterView(selectedPriceRange: $selectedPriceRange, selectedBedrooms: $selectedBedrooms)
+            FilterView(
+                selectedPriceRange: $selectedPriceRange,
+                selectedBedrooms: $selectedBedrooms
+            )
+        }
+        .alert(authManager.message, isPresented: $authManager.showMessage) {
+            Button("OK", role: .cancel) { }
         }
         .sheet(isPresented: $showingLoginSheet) {
             LoginView()
@@ -314,6 +447,24 @@ struct FilterView: View {
                 .foregroundColor(Theme.primaryRed)
             }
         }
+    }
+}
+
+struct FilterButton: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+            Text(text)
+            Image(systemName: "chevron.down")
+        }
+        .foregroundColor(Theme.textWhite)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Theme.cardBackground)
+        .cornerRadius(Theme.cornerRadius)
     }
 }
 

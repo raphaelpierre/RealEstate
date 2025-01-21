@@ -65,13 +65,13 @@ struct NumericFormField<T: Numeric>: View {
                 .font(Theme.Typography.body)
             
             Group {
-                if isCurrency, let doubleValue = value as? Double {
+                if isCurrency, let _ = value as? Double {
                     TextField("", value: $value as! Binding<Double>, format: .currency(code: "USD"))
                         .modernTextField()
-                } else if let intValue = value as? Int {
+                } else if value is Int {
                     TextField("", value: $value as! Binding<Int>, format: .number)
                         .modernTextField()
-                } else if let doubleValue = value as? Double {
+                } else if let _ = value as? Double {
                     TextField("", value: $value as! Binding<Double>, format: .number)
                         .modernTextField()
                 }

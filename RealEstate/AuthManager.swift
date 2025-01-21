@@ -20,16 +20,26 @@ final class AuthManager: ObservableObject {
     @Published private(set) var isAuthenticated = false
     @Published private(set) var isAdmin = false
     @Published var errorMessage: String?
+    @Published var showMessage = false
+    @Published var message = ""
     
     private let auth = Auth.auth()
     private let db = Firestore.firestore()
+    private let firebaseManager = FirebaseManager.shared
+    private var authStateHandler: AuthStateDidChangeListenerHandle?
     
     private init() {
         setupAuthStateListener()
     }
     
+    deinit {
+        if let handler = authStateHandler {
+            auth.removeStateDidChangeListener(handler)
+        }
+    }
+    
     private func setupAuthStateListener() {
-        auth.addStateDidChangeListener { [weak self] _, user in
+        authStateHandler = auth.addStateDidChangeListener { [weak self] _, user in
             guard let self = self else { return }
             
             Task {
@@ -73,8 +83,12 @@ final class AuthManager: ObservableObject {
         await fetchUserData(userId: result.user.uid)
     }
     
-    func signOut() throws {
+    func signOut() async throws {
+        // Clean up favorites before signing out
+        await firebaseManager.cleanupUserData()
         try auth.signOut()
+        message = "You have been successfully signed out"
+        showMessage = true
     }
     
     func resetPassword(email: String) async throws {
@@ -83,46 +97,50 @@ final class AuthManager: ObservableObject {
     
     func deleteAccount() async throws {
         guard let user = auth.currentUser else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+            throw AuthError.userNotAuthenticated
         }
+        
+        // Delete all favorites first
+        try await firebaseManager.deleteAllFavorites()
         
         // Delete user document from Firestore
         try await db.collection("users").document(user.uid).delete()
+        
         // Delete user account
         try await user.delete()
+        
+        // Clean up local data
+        await firebaseManager.cleanupUserData()
+    }
+    
+    private func updateAdminStatus(for userId: String, isAdmin: Bool) async throws {
+        let data: [String: Any] = ["isAdmin": isAdmin]
+        try await db.collection("users").document(userId).updateData(data)
     }
     
     func makeAdmin(userId: String) async throws {
         guard isAdmin else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Only admins can promote users"])
+            throw AuthError.adminRequired
         }
-        
-        try await db.collection("users").document(userId).updateData([
-            "isAdmin": true
-        ])
+        try await updateAdminStatus(for: userId, isAdmin: true)
     }
     
     func removeAdmin(userId: String) async throws {
         guard isAdmin else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Only admins can demote users"])
+            throw AuthError.adminRequired
         }
-        
-        try await db.collection("users").document(userId).updateData([
-            "isAdmin": false
-        ])
+        try await updateAdminStatus(for: userId, isAdmin: false)
     }
     
     func signInWithGoogle() async throws {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
-            throw NSError(domain: "", code: -1, 
-                userInfo: [NSLocalizedDescriptionKey: "No client ID found"])
+            throw AuthError.noClientId
         }
         
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
-            throw NSError(domain: "", code: -1, 
-                userInfo: [NSLocalizedDescriptionKey: "No root view controller found"])
+            throw AuthError.noRootViewController
         }
         
         let config = GIDConfiguration(clientID: clientID)
@@ -130,8 +148,7 @@ final class AuthManager: ObservableObject {
         
         let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
         guard let idToken = result.user.idToken?.tokenString else {
-            throw NSError(domain: "", code: -1, 
-                userInfo: [NSLocalizedDescriptionKey: "No ID token found"])
+            throw AuthError.userNotAuthenticated
         }
         
         let credential = GoogleAuthProvider.credential(
@@ -154,5 +171,25 @@ final class AuthManager: ObservableObject {
         }
         
         await fetchUserData(userId: authResult.user.uid)
+    }
+}
+
+enum AuthError: LocalizedError {
+    case adminRequired
+    case noClientId
+    case noRootViewController
+    case userNotAuthenticated
+    
+    var errorDescription: String? {
+        switch self {
+        case .adminRequired:
+            return "Only admins can demote users"
+        case .noClientId:
+            return "No client ID found"
+        case .noRootViewController:
+            return "No root view controller found"
+        case .userNotAuthenticated:
+            return "User is not authenticated"
+        }
     }
 }

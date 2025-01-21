@@ -8,20 +8,22 @@ struct PropertyListView: View {
     @State private var searchText = ""
     @State private var sortOption = SortOption.priceHighToLow
     
-    enum SortOption: String, CaseIterable {
-        case priceHighToLow = "Price: High to Low"
-        case priceLowToHigh = "Price: Low to High"
-        case bedsHighToLow = "Beds: Most to Least"
-        case bedsLowToHigh = "Beds: Least to Most"
-        case newest = "Newest First"
-    }
+    private let currencyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        return formatter
+    }()
     
-    var filteredAndSortedProperties: [Property] {
+    // MARK: - Computed Properties
+    
+    private var filteredAndSortedProperties: [Property] {
         let filtered = firebaseManager.properties.filter { property in
             searchText.isEmpty || 
             property.title.localizedCaseInsensitiveContains(searchText) ||
             property.description.localizedCaseInsensitiveContains(searchText) ||
-            property.address.localizedCaseInsensitiveContains(searchText)
+            property.address.localizedCaseInsensitiveContains(searchText) ||
+            property.city.localizedCaseInsensitiveContains(searchText) ||
+            property.country.localizedCaseInsensitiveContains(searchText)
         }
         
         return filtered.sorted { first, second in
@@ -40,6 +42,64 @@ struct PropertyListView: View {
         }
     }
     
+    // MARK: - View Components
+    
+    private var searchAndSortHeader: some View {
+        VStack(spacing: Theme.smallPadding) {
+            // Sort Picker
+            Picker("Sort", selection: $sortOption) {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Text(option.rawValue)
+                        .foregroundColor(Theme.textWhite)
+                        .tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(Theme.primaryRed)
+            
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(Theme.textWhite.opacity(0.6))
+                TextField("Search properties...", text: $searchText)
+                    .foregroundColor(Theme.textWhite)
+                    .tint(Theme.primaryRed)
+            }
+            .padding()
+            .background(Theme.cardBackground)
+            .cornerRadius(Theme.cornerRadius)
+        }
+        .padding(.horizontal)
+    }
+    
+    private var propertyList: some View {
+        Group {
+            if filteredAndSortedProperties.isEmpty {
+                ContentUnavailableView(
+                    "No Properties Found",
+                    systemImage: "house",
+                    description: Text("Try adjusting your search criteria")
+                )
+                .foregroundColor(Theme.textWhite)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: Theme.padding) {
+                        ForEach(filteredAndSortedProperties) { property in
+                            NavigationLink(destination: PropertyDetailView(property: property)) {
+                                PropertyCard(property: property)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Body
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -51,58 +111,8 @@ struct PropertyListView: View {
                         .tint(Theme.primaryRed)
                 } else {
                     VStack(spacing: Theme.padding) {
-                        // Sort and Search Header
-                        VStack(spacing: Theme.smallPadding) {
-                            // Sort Picker
-                            Picker("Sort", selection: $sortOption) {
-                                ForEach(SortOption.allCases, id: \.self) { option in
-                                    Text(option.rawValue)
-                                        .foregroundColor(Theme.textWhite)
-                                        .tag(option)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .tint(Theme.primaryRed)
-                            
-                            // Search Bar
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(Theme.textWhite.opacity(0.6))
-                                TextField("Search properties...", text: $searchText)
-                                    .foregroundColor(Theme.textWhite)
-                                    .tint(Theme.primaryRed)
-                            }
-                            .padding()
-                            .background(Theme.cardBackground)
-                            .cornerRadius(Theme.cornerRadius)
-                        }
-                        .padding(.horizontal)
-                        
-                        // Property List
-                        if filteredAndSortedProperties.isEmpty {
-                            ContentUnavailableView(
-                                "No Properties Found",
-                                systemImage: "house",
-                                description: Text("Try adjusting your search criteria")
-                            )
-                            .foregroundColor(Theme.textWhite)
-                        } else {
-                            ScrollView {
-                                LazyVStack(spacing: Theme.padding) {
-                                    ForEach(filteredAndSortedProperties) { property in
-                                        NavigationLink(destination: PropertyDetailView(property: property)) {
-                                            PropertyCard(property: property)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                        .simultaneousGesture(TapGesture().onEnded {
-                                            // Empty gesture to prevent navigation when tapping the heart
-                                        })
-                                    }
-                                }
-                                .padding()
-                            }
-                        }
+                        searchAndSortHeader
+                        propertyList
                     }
                 }
             }
@@ -127,6 +137,8 @@ struct PropertyListView: View {
         }
     }
     
+    // MARK: - Methods
+    
     private func loadProperties() async {
         isLoading = true
         do {
@@ -138,133 +150,144 @@ struct PropertyListView: View {
     }
 }
 
+// MARK: - Property Card View
+
 struct PropertyCard: View {
     let property: Property
-    @EnvironmentObject private var firebaseManager: FirebaseManager
-    @EnvironmentObject private var authManager: AuthManager
-    @State private var isFavorite: Bool
     
-    init(property: Property) {
-        self.property = property
-        _isFavorite = State(initialValue: property.isFavorite)
-    }
+    private let currencyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "en_US")
+        return formatter
+    }()
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Property Image
+    private var propertyImage: some View {
+        Group {
             if let firstImage = property.imageURLs.first {
                 AsyncImage(url: URL(string: firstImage)) { phase in
                     switch phase {
                     case .empty:
-                        Rectangle()
-                            .foregroundColor(Theme.cardBackground)
-                            .overlay(ProgressView().tint(Theme.primaryRed))
-                            .frame(height: 200)
-                            .overlay(alignment: .topTrailing) {
-                                favoriteButton
-                            }
+                        placeholderImage
                     case .success(let image):
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .scaledToFill()
                             .frame(height: 200)
                             .clipped()
-                            .overlay(alignment: .topTrailing) {
-                                favoriteButton
-                            }
                     case .failure:
-                        Rectangle()
-                            .foregroundColor(Theme.cardBackground)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .foregroundColor(Theme.textWhite.opacity(0.6))
-                            )
-                            .frame(height: 200)
-                            .overlay(alignment: .topTrailing) {
-                                favoriteButton
-                            }
+                        placeholderImage
                     @unknown default:
                         EmptyView()
                     }
                 }
             } else {
-                Rectangle()
-                    .foregroundColor(Theme.cardBackground)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(Theme.textWhite.opacity(0.6))
-                    )
-                    .frame(height: 200)
-                    .overlay(alignment: .topTrailing) {
-                        favoriteButton
-                    }
+                placeholderImage
             }
+        }
+    }
+    
+    private var placeholderImage: some View {
+        Rectangle()
+            .foregroundColor(Theme.cardBackground)
+            .overlay(
+                Image(systemName: "photo")
+                    .foregroundColor(Theme.textWhite.opacity(0.6))
+            )
+            .frame(height: 200)
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            propertyImage
             
-            VStack(alignment: .leading, spacing: Theme.smallPadding) {
-                Text(property.title)
-                    .font(Theme.Typography.heading)
-                    .foregroundColor(Theme.textWhite)
-                    .lineLimit(1)
-                
-                Text("$\(Int(property.price))")
-                    .font(Theme.Typography.title)
-                    .foregroundColor(Theme.primaryRed)
-                
-                Text(property.address)
-                    .font(Theme.Typography.caption)
-                    .foregroundColor(Theme.textWhite.opacity(0.8))
-                    .lineLimit(2)
-                
-                HStack(spacing: Theme.padding) {
-                    PropertyFeature(icon: "bed.double", value: "\(property.bedrooms)")
-                    PropertyFeature(icon: "shower", value: "\(property.bathrooms)")
-                    PropertyFeature(icon: "square", value: "\(Int(property.area))m²")
+            VStack(alignment: .leading, spacing: Theme.padding) {
+                // Title and Price
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(property.title)
+                        .font(Theme.Typography.heading)
+                        .foregroundColor(Theme.textWhite)
+                        .lineLimit(2)
+                    
+                    Text(currencyFormatter.string(from: NSNumber(value: property.price)) ?? "$0")
+                        .font(Theme.Typography.title)
+                        .foregroundColor(Theme.primaryRed)
                 }
-                .padding(.top, Theme.smallPadding)
+                
+                // Key Details
+                HStack(spacing: Theme.padding) {
+                    Label {
+                        Text("\(property.bedrooms) Beds")
+                            .foregroundColor(Theme.textWhite.opacity(0.7))
+                    } icon: {
+                        Image(systemName: "bed.double.fill")
+                            .foregroundColor(Theme.primaryRed)
+                    }
+                    
+                    Label {
+                        Text("\(property.bathrooms) Baths")
+                            .foregroundColor(Theme.textWhite.opacity(0.7))
+                    } icon: {
+                        Image(systemName: "shower.fill")
+                            .foregroundColor(Theme.primaryRed)
+                    }
+                    
+                    Label {
+                        Text("\(Int(property.area))m²")
+                            .foregroundColor(Theme.textWhite.opacity(0.7))
+                    } icon: {
+                        Image(systemName: "square.fill")
+                            .foregroundColor(Theme.primaryRed)
+                    }
+                }
+                .font(Theme.Typography.caption)
+                
+                // Location
+                if !property.address.isEmpty || !property.city.isEmpty {
+                    Label {
+                        Text("\(property.address), \(property.city)")
+                            .foregroundColor(Theme.textWhite.opacity(0.7))
+                            .lineLimit(1)
+                    } icon: {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(Theme.primaryRed)
+                    }
+                    .font(Theme.Typography.caption)
+                }
             }
-            .padding(Theme.padding)
+            .padding()
         }
         .background(Theme.cardBackground)
         .cornerRadius(Theme.cornerRadius)
-        .shadow(color: Color.black.opacity(Theme.shadowOpacity), radius: Theme.shadowRadius, x: 0, y: 2)
-    }
-    
-    private var favoriteButton: some View {
-        Group {
-            if authManager.isAuthenticated {
-                Button {
-                    isFavorite.toggle() // Update local state immediately
-                    firebaseManager.toggleFavorite(for: property)
-                } label: {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .foregroundColor(isFavorite ? Theme.primaryRed : Theme.textWhite)
-                        .font(.title2)
-                        .padding(Theme.padding)
-                }
-                .animation(.easeInOut, value: isFavorite)
-            } else {
-                NavigationLink(destination: LoginView()) {
-                    Image(systemName: "heart")
-                        .foregroundColor(Theme.textWhite)
-                        .font(.title2)
-                        .padding(Theme.padding)
-                }
-            }
-        }
     }
 }
+
+// MARK: - Supporting Views
 
 struct PropertyFeature: View {
     let icon: String
     let value: String
     
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .foregroundColor(Theme.textWhite.opacity(0.6))
+        Label {
             Text(value)
-                .foregroundColor(Theme.textWhite.opacity(0.8))
-                .font(Theme.Typography.caption)
+                .foregroundColor(Theme.textWhite.opacity(0.7))
+        } icon: {
+            Image(systemName: icon)
+                .foregroundColor(Theme.primaryRed)
         }
+        .font(Theme.Typography.caption)
+    }
+}
+
+// MARK: - Sort Option
+
+extension PropertyListView {
+    enum SortOption: String, CaseIterable {
+        case priceHighToLow = "Price: High to Low"
+        case priceLowToHigh = "Price: Low to High"
+        case bedsHighToLow = "Beds: Most to Least"
+        case bedsLowToHigh = "Beds: Least to Most"
+        case newest = "Newest First"
     }
 }

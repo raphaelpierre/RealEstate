@@ -11,42 +11,67 @@ import FirebaseStorage
 import FirebaseCore
 import FirebaseAuth
 
+@MainActor
 class FirebaseManager: ObservableObject {
     static let shared = FirebaseManager()
     
+    private let auth = Auth.auth()
     private let db = Firestore.firestore()
     private let storage: Storage
-    private let auth = Auth.auth()
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
     
-    @Published var properties: [Property] = []
+    @Published private(set) var properties: [Property] = []
     @Published var isAdmin = false // TODO: Replace with proper auth
-    @Published var favoritePropertyIds: Set<String> = []
+    @Published private(set) var favoritePropertyIds: Set<String> = []
     
-    private init() {
+    init() {
         // Ensure Firebase is configured
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
         }
         storage = Storage.storage()
         
-        // Listen for auth state changes
-        auth.addStateDidChangeListener { [weak self] _, user in
-            if user != nil {
-                self?.loadFavorites()
-            } else {
-                DispatchQueue.main.async {
-                    self?.favoritePropertyIds.removeAll()
-                    self?.updatePropertiesFavoriteStatus()
+        // Store the auth state listener handle
+        authStateHandle = auth.addStateDidChangeListener { [weak self] _, user in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                
+                if user != nil {
+                    do {
+                        // First load favorites
+                        try await self.loadFavorites()
+                        
+                        // Then fetch properties to ensure they have correct favorite status
+                        try await self.fetchProperties()
+                    } catch {
+                        print("❌ Error loading data after auth state change: \(error.localizedDescription)")
+                    }
+                } else {
+                    self.favoritePropertyIds.removeAll()
+                    try? await self.fetchProperties() // Reload properties without favorites
                 }
             }
+        }
+        
+        // Initial properties load
+        Task {
+            try? await fetchProperties()
+        }
+    }
+    
+    deinit {
+        // Remove the auth state listener when the manager is deallocated
+        if let handle = authStateHandle {
+            auth.removeStateDidChangeListener(handle)
         }
     }
     
     // MARK: - Properties Management
     
+    @MainActor
     func getProperty(id: String) async throws -> Property {
         let document = try await db.collection("properties").document(id).getDocument()
-        guard let property = Property.fromFirestore(document) else {
+        guard var property = Property.fromFirestore(document) else {
             throw NSError(
                 domain: "FirebaseManager",
                 code: -1,
@@ -55,24 +80,21 @@ class FirebaseManager: ObservableObject {
         }
         
         // Update favorite status
-        var updatedProperty = property
-        updatedProperty.isFavorite = favoritePropertyIds.contains(property.id)
-        return updatedProperty
+        property.isFavorite = favoritePropertyIds.contains(property.id)
+        return property
     }
     
+    @MainActor
     func fetchProperties() async throws {
         let snapshot = try await db.collection("properties").getDocuments()
+        
         let fetchedProperties = snapshot.documents.compactMap { document -> Property? in
-            if var property = Property.fromFirestore(document) {
-                property.isFavorite = favoritePropertyIds.contains(property.id)
-                return property
-            }
-            return nil
+            guard var property = Property.fromFirestore(document) else { return nil }
+            property.isFavorite = self.favoritePropertyIds.contains(property.id)
+            return property
         }
         
-        DispatchQueue.main.async {
-            self.properties = fetchedProperties
-        }
+        self.properties = fetchedProperties
     }
     
     func addProperty(_ property: Property) async throws {
@@ -139,79 +161,140 @@ class FirebaseManager: ObservableObject {
     
     // MARK: - Favorites Management
     
-    private func loadFavorites() {
-        guard let userId = auth.currentUser?.uid else { return }
-        Task {
-            do {
-                let favoritesDoc = try await db.collection("users").document(userId).collection("favorites").getDocuments()
-                let favoriteIds = favoritesDoc.documents.map { $0.documentID }
-                
-                DispatchQueue.main.async {
-                    self.favoritePropertyIds = Set(favoriteIds)
-                    // Update isFavorite status for all properties
-                    self.updatePropertiesFavoriteStatus()
-                }
-            } catch {
-                print("Error loading favorites: \(error)")
-            }
+    @MainActor
+    func loadFavorites() async throws {
+        guard let userId = auth.currentUser?.uid else {
+            print("❌ Cannot load favorites: No authenticated user")
+            throw AuthError.userNotAuthenticated
+        }
+        
+        let userRef = db.collection("users").document(userId)
+        let favoritesRef = userRef.collection("favorites")
+        
+        do {
+            let snapshot = try await favoritesRef.getDocuments()
+            let favoriteIds = snapshot.documents.map { $0.documentID }
+            self.favoritePropertyIds = Set(favoriteIds)
+            
+            // Update existing properties with favorite status
+            self.updatePropertiesFavoriteStatus()
+        } catch {
+            print("❌ Error loading favorites: \(error.localizedDescription)")
+            throw FavoriteError.loadError(error)
         }
     }
     
+    @MainActor
+    func toggleFavorite(for property: Property) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            throw AuthError.userNotAuthenticated
+        }
+        
+        let userRef = db.collection("users").document(userId)
+        let favoriteRef = userRef.collection("favorites").document(property.id)
+        
+        do {
+            // First verify if the document exists
+            let docSnapshot = try await favoriteRef.getDocument()
+            let isCurrentlyFavorite = docSnapshot.exists
+            
+            if isCurrentlyFavorite {
+                try await favoriteRef.delete()
+                favoritePropertyIds.remove(property.id)
+            } else {
+                let data: [String: Any] = [
+                    "propertyId": property.id,
+                    "addedAt": FieldValue.serverTimestamp(),
+                    "title": property.title,
+                    "price": property.price,
+                    "imageURL": property.imageURLs.first ?? "",
+                    "address": property.address,
+                    "city": property.city,
+                    "bedrooms": property.bedrooms,
+                    "bathrooms": property.bathrooms,
+                    "area": property.area,
+                    "updatedAt": FieldValue.serverTimestamp()
+                ]
+                try await favoriteRef.setData(data)
+                favoritePropertyIds.insert(property.id)
+            }
+            
+            // Update local state
+            self.updatePropertiesFavoriteStatus()
+            
+        } catch {
+            print("❌ Error toggling favorite: \(error.localizedDescription)")
+            throw FavoriteError.toggleError(error)
+        }
+    }
+    
+    @MainActor
     private func updatePropertiesFavoriteStatus() {
-        DispatchQueue.main.async {
-            self.properties = self.properties.map { property in
-                var updatedProperty = property
-                updatedProperty.isFavorite = self.favoritePropertyIds.contains(property.id)
-                return updatedProperty
-            }
-            self.objectWillChange.send()
-        }
-    }
-    
-    func toggleFavorite(for property: Property) {
-        guard let userId = auth.currentUser?.uid else { return }
-        
-        // Update local state immediately
-        let isCurrentlyFavorite = favoritePropertyIds.contains(property.id)
-        if isCurrentlyFavorite {
-            favoritePropertyIds.remove(property.id)
-        } else {
-            favoritePropertyIds.insert(property.id)
-        }
-        updatePropertiesFavoriteStatus()
-        
-        // Then update Firebase
-        Task {
-            do {
-                let favoriteRef = db.collection("users").document(userId).collection("favorites").document(property.id)
-                
-                if isCurrentlyFavorite {
-                    // Remove from favorites
-                    try await favoriteRef.delete()
-                } else {
-                    // Add to favorites
-                    try await favoriteRef.setData(["addedAt": FieldValue.serverTimestamp()])
-                }
-                
-                // Refresh properties to ensure consistency
-                try await fetchProperties()
-            } catch {
-                print("Error toggling favorite: \(error)")
-                // Revert local state if Firebase update fails
-                DispatchQueue.main.async {
-                    if isCurrentlyFavorite {
-                        self.favoritePropertyIds.insert(property.id)
-                    } else {
-                        self.favoritePropertyIds.remove(property.id)
-                    }
-                    self.updatePropertiesFavoriteStatus()
-                }
-            }
+        for i in properties.indices {
+            let isFavorite = favoritePropertyIds.contains(properties[i].id)
+            properties[i].isFavorite = isFavorite
         }
     }
     
     func isFavorite(_ propertyId: String) -> Bool {
         return favoritePropertyIds.contains(propertyId)
+    }
+    
+    // MARK: - Error Types
+    
+    enum AuthError: LocalizedError {
+        case userNotAuthenticated
+        
+        var errorDescription: String? {
+            switch self {
+            case .userNotAuthenticated:
+                return "You must be signed in to perform this action"
+            }
+        }
+    }
+    
+    enum FavoriteError: LocalizedError {
+        case loadError(Error)
+        case toggleError(Error)
+        
+        var errorDescription: String? {
+            switch self {
+            case .loadError(let error):
+                return "Failed to load favorites: \(error.localizedDescription)"
+            case .toggleError(let error):
+                return "Failed to update favorite: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    // MARK: - Cleanup Methods
+    
+    @MainActor
+    func cleanupUserData() async {
+        // Clear local favorites
+        favoritePropertyIds.removeAll()
+        updatePropertiesFavoriteStatus()
+        
+        // Clear local properties
+        properties.removeAll()
+    }
+    
+    @MainActor
+    func deleteAllFavorites() async throws {
+        guard let userId = auth.currentUser?.uid else { return }
+        
+        // Get all favorites
+        let favoritesRef = db.collection("users").document(userId).collection("favorites")
+        let snapshot = try await favoritesRef.getDocuments()
+        
+        // Delete each favorite
+        for document in snapshot.documents {
+            try await document.reference.delete()
+        }
+        
+        // Clear local state
+        favoritePropertyIds.removeAll()
+        updatePropertiesFavoriteStatus()
     }
     
     // MARK: - Sample Data
