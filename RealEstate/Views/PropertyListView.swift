@@ -1,152 +1,77 @@
 import SwiftUI
 import FirebaseFirestore
+import MapKit
 
 struct PropertyListView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var searchText = ""
-    @State private var sortOption = SortOption.priceHighToLow
+    @State private var selectedViewMode: ViewMode
     
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter
-    }()
-    
-    // MARK: - Computed Properties
-    
-    private var filteredAndSortedProperties: [Property] {
-        let filtered = firebaseManager.properties.filter { property in
-            searchText.isEmpty || 
-            property.title.localizedCaseInsensitiveContains(searchText) ||
-            property.description.localizedCaseInsensitiveContains(searchText) ||
-            property.address.localizedCaseInsensitiveContains(searchText) ||
-            property.city.localizedCaseInsensitiveContains(searchText) ||
-            property.country.localizedCaseInsensitiveContains(searchText)
-        }
-        
-        return filtered.sorted { first, second in
-            switch sortOption {
-            case .priceHighToLow:
-                return first.price > second.price
-            case .priceLowToHigh:
-                return first.price < second.price
-            case .bedsHighToLow:
-                return first.bedrooms > second.bedrooms
-            case .bedsLowToHigh:
-                return first.bedrooms < second.bedrooms
-            case .newest:
-                return first.createdAt > second.createdAt
-            }
-        }
+    // New initializer to support setting initial view mode
+    init(initialViewMode: ViewMode = .list) {
+        _selectedViewMode = State(initialValue: initialViewMode)
     }
-    
-    // MARK: - View Components
-    
-    private var searchAndSortHeader: some View {
-        VStack(spacing: Theme.smallPadding) {
-            // Sort Picker
-            Picker("Sort", selection: $sortOption) {
-                ForEach(SortOption.allCases, id: \.self) { option in
-                    Text(option.rawValue)
-                        .foregroundColor(Theme.textWhite)
-                        .tag(option)
-                }
-            }
-            .pickerStyle(.menu)
-            .tint(Theme.primaryRed)
-            
-            // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(Theme.textWhite.opacity(0.6))
-                TextField("Search properties...", text: $searchText)
-                    .foregroundColor(Theme.textWhite)
-                    .tint(Theme.primaryRed)
-            }
-            .padding()
-            .background(Theme.cardBackground)
-            .cornerRadius(Theme.cornerRadius)
-        }
-        .padding(.horizontal)
-    }
-    
-    private var propertyList: some View {
-        Group {
-            if filteredAndSortedProperties.isEmpty {
-                ContentUnavailableView(
-                    "No Properties Found",
-                    systemImage: "house",
-                    description: Text("Try adjusting your search criteria")
-                )
-                .foregroundColor(Theme.textWhite)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: Theme.padding) {
-                        ForEach(filteredAndSortedProperties) { property in
-                            NavigationLink(destination: PropertyDetailView(property: property)) {
-                                PropertyCard(property: property)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                    }
-                    .padding()
-                }
-            }
-        }
-    }
-    
-    // MARK: - Body
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                Theme.backgroundBlack
-                    .ignoresSafeArea()
-                
-                if isLoading {
-                    ProgressView()
-                        .tint(Theme.primaryRed)
-                } else {
-                    VStack(spacing: Theme.padding) {
-                        searchAndSortHeader
-                        propertyList
+        VStack {
+            // Segmented control for view mode
+            Picker("View Mode", selection: $selectedViewMode) {
+                Text("List").tag(ViewMode.list)
+                Text("Map").tag(ViewMode.map)
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.horizontal)
+            
+            // Conditional view based on selected mode
+            if selectedViewMode == .list {
+                // List view without filters
+                Group {
+                    if firebaseManager.properties.isEmpty {
+                        ContentUnavailableView(
+                            "No Properties Found",
+                            systemImage: "house",
+                            description: Text("Check back later for new listings")
+                        )
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: Theme.padding) {
+                                ForEach(firebaseManager.properties) { property in
+                                    NavigationLink(destination: PropertyDetailView(property: property)) {
+                                        PropertyCard(property: property)
+                                            .contentShape(Rectangle())
+                                    }
+                                }
+                            }
+                            .padding()
+                        }
                     }
                 }
+            } else {
+                // Map view
+                PropertyMapView(properties: firebaseManager.properties)
             }
-            .navigationTitle("Properties")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(Theme.backgroundBlack, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .task {
-                await loadProperties()
-            }
-            .refreshable {
-                await loadProperties()
-            }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") { errorMessage = nil }
-            } message: {
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
+        }
+        .onAppear {
+            // Fetch properties if not already loaded
+            Task {
+                if firebaseManager.properties.isEmpty {
+                    isLoading = true
+                    do {
+                        try await firebaseManager.fetchProperties()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                    isLoading = false
                 }
             }
         }
     }
     
-    // MARK: - Methods
-    
-    private func loadProperties() async {
-        isLoading = true
-        do {
-            try await firebaseManager.fetchProperties()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isLoading = false
+    // Existing enums remain the same
+    enum ViewMode {
+        case list
+        case map
     }
 }
 
@@ -277,17 +202,5 @@ struct PropertyFeature: View {
                 .foregroundColor(Theme.primaryRed)
         }
         .font(Theme.Typography.caption)
-    }
-}
-
-// MARK: - Sort Option
-
-extension PropertyListView {
-    enum SortOption: String, CaseIterable {
-        case priceHighToLow = "Price: High to Low"
-        case priceLowToHigh = "Price: Low to High"
-        case bedsHighToLow = "Beds: Most to Least"
-        case bedsLowToHigh = "Beds: Least to Most"
-        case newest = "Newest First"
     }
 }

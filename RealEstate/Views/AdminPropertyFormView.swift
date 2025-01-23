@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import CoreLocation
 
 struct AdminPropertyFormView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
@@ -381,7 +382,7 @@ struct AdminPropertyFormView: View {
                         } else {
                             Button {
                                 Task {
-                                    await saveProperty()
+                                    await savePropertyToFirebase()
                                 }
                             } label: {
                                 Text("Save Property")
@@ -542,71 +543,58 @@ struct AdminPropertyFormView: View {
         }
     }
     
-    private func saveProperty() async {
-        isLoading = true
+    private func savePropertyToFirebase() async {
+        // Validate input fields
+        guard validateFields() else { return }
+        
+        // Create property object
+        let propertyToSave = Property(
+            id: property?.id ?? UUID().uuidString,
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            price: price,
+            description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+            address: address.trimmingCharacters(in: .whitespacesAndNewlines),
+            contact: ContactInfo(
+                whatsapp: contactWhatsapp.trimmingCharacters(in: .whitespacesAndNewlines)
+            ),
+            zipCode: zipCode.trimmingCharacters(in: .whitespacesAndNewlines),
+            city: city.trimmingCharacters(in: .whitespacesAndNewlines),
+            country: country.trimmingCharacters(in: .whitespacesAndNewlines),
+            bedrooms: bedrooms,
+            bathrooms: bathrooms,
+            area: area,
+            type: selectedType.rawValue,
+            purpose: selectedPurpose.rawValue,
+            imageURLs: imageURLs,
+            createdAt: property?.createdAt ?? Date(),
+            updatedAt: Date(),
+            // Optional: If you want to preserve existing coordinates
+            latitude: property?.latitude ?? 0.0,
+            longitude: property?.longitude ?? 0.0
+        )
         
         do {
-            // First upload any new images
-            var updatedImageURLs = imageURLs
+            isLoading = true
             
-            // Use concurrency to upload images in parallel
-            let newImageURLs = try await withThrowingTaskGroup(of: String.self) { group in
-                for imageData in newImageData {
-                    group.addTask {
-                        return try await self.firebaseManager.uploadImage(imageData)
-                    }
-                }
-                
-                var uploadedURLs: [String] = []
-                for try await imageURL in group {
-                    uploadedURLs.append(imageURL)
-                }
-                return uploadedURLs
-            }
+            // Use the new saveProperty method which includes geocoding
+            _ = try await firebaseManager.saveProperty(propertyToSave)
             
-            updatedImageURLs.append(contentsOf: newImageURLs)
-            
-            // Create property object
-            let propertyToSave = Property(
-                id: property?.id ?? UUID().uuidString,
-                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                price: price,
-                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
-                address: address.trimmingCharacters(in: .whitespacesAndNewlines),
-                contact: ContactInfo(
-                    whatsapp: contactWhatsapp.trimmingCharacters(in: .whitespacesAndNewlines)
-                ),
-                zipCode: zipCode.trimmingCharacters(in: .whitespacesAndNewlines),
-                city: city.trimmingCharacters(in: .whitespacesAndNewlines),
-                country: country.trimmingCharacters(in: .whitespacesAndNewlines),
-                bedrooms: bedrooms,
-                bathrooms: bathrooms,
-                area: area,
-                type: selectedType.rawValue,
-                purpose: selectedPurpose.rawValue,
-                imageURLs: updatedImageURLs,
-                createdAt: property?.createdAt ?? Date(),
-                updatedAt: Date()
-            )
-            
-            if property != nil {
-                try await firebaseManager.updateProperty(propertyToSave)
-            } else {
-                try await firebaseManager.addProperty(propertyToSave)
-            }
-            
+            // Optional: show success message or navigate away
             await MainActor.run {
                 isLoading = false
                 dismiss()
             }
         } catch {
-            // Comprehensive error handling
             await MainActor.run {
                 isLoading = false
-                print("Error saving property: \(error.localizedDescription)")
-                // Optionally show an error alert to the user
+                errorMessage = error.localizedDescription
             }
         }
+    }
+    
+    private func validateFields() -> Bool {
+        // Implement your validation logic here
+        return true
     }
 }
 

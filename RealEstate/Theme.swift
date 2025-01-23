@@ -2,6 +2,7 @@ import SwiftUI
 
 enum Theme {
     static let primaryRed = Color("PrimaryRed")
+    static let primaryBlue = Color("PrimaryBlue")
     static let backgroundBlack = Color("BackgroundBlack")
     static let textWhite = Color.white
     static let cardBackground = Color("CardBackground")

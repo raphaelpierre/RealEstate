@@ -15,9 +15,9 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>4.0</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>4</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIApplicationSceneManifest</key>
@@ -48,6 +48,12 @@
     <string>We need access to your photo library to upload property images.</string>
     <key>NSCameraUsageDescription</key>
     <string>We need access to your camera to take property photos.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>We use your location to help you find nearby properties and provide location-based services.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>We use your location to help you find nearby properties and provide location-based services.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>We use your location to help you find nearby properties and provide location-based services.</string>
     <key>GIDClientID</key>
     <string>516865549374-bftjemcatb4uvppppq06koloipfk2i1j.apps.googleusercontent.com</string>
     <key>CFBundleURLTypes</key>

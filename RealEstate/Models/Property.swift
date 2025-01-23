@@ -42,6 +42,8 @@ struct Property: Identifiable, Codable, Equatable {
     var createdAt: Date
     var updatedAt: Date
     var isFavorite: Bool = false
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
     
     init(id: String = UUID().uuidString,
          title: String,
@@ -59,7 +61,10 @@ struct Property: Identifiable, Codable, Equatable {
          purpose: String = "Buy",
          imageURLs: [String] = [],
          createdAt: Date = Date(),
-         updatedAt: Date = Date()) {
+         updatedAt: Date = Date(),
+         isFavorite: Bool = false,
+         latitude: Double = 0.0,
+         longitude: Double = 0.0) {
         self.id = id
         self.title = title
         self.price = price
@@ -77,6 +82,9 @@ struct Property: Identifiable, Codable, Equatable {
         self.imageURLs = imageURLs
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.isFavorite = isFavorite
+        self.latitude = latitude
+        self.longitude = longitude
     }
     
     // Implement Equatable
@@ -98,7 +106,9 @@ struct Property: Identifiable, Codable, Equatable {
                lhs.imageURLs == rhs.imageURLs &&
                lhs.createdAt == rhs.createdAt &&
                lhs.updatedAt == rhs.updatedAt &&
-               lhs.isFavorite == rhs.isFavorite
+               lhs.isFavorite == rhs.isFavorite &&
+               lhs.latitude == rhs.latitude &&
+               lhs.longitude == rhs.longitude
     }
     
     static func fromFirestore(_ document: DocumentSnapshot) -> Property? {
@@ -121,7 +131,9 @@ struct Property: Identifiable, Codable, Equatable {
             purpose: data["purpose"] as? String ?? "Buy",
             imageURLs: data["imageURLs"] as? [String] ?? [],
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
-            updatedAt: (data["updatedAt"] as? Timestamp)?.dateValue() ?? Date()
+            updatedAt: (data["updatedAt"] as? Timestamp)?.dateValue() ?? Date(),
+            latitude: data["latitude"] as? Double ?? 0.0,
+            longitude: data["longitude"] as? Double ?? 0.0
         )
     }
     
@@ -142,7 +154,9 @@ struct Property: Identifiable, Codable, Equatable {
             "purpose": purpose,
             "imageURLs": imageURLs,
             "createdAt": Timestamp(date: createdAt),
-            "updatedAt": Timestamp(date: updatedAt)
+            "updatedAt": Timestamp(date: updatedAt),
+            "latitude": latitude,
+            "longitude": longitude
         ]
     }
 }
@@ -163,6 +177,8 @@ extension Property {
         area: 3500,
         type: "Villa",
         purpose: "Rent",
-        imageURLs: []
+        imageURLs: [],
+        latitude: 34.0224,
+        longitude: -118.8011
     )
 }

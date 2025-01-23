@@ -10,6 +10,7 @@ import FirebaseFirestore
 import FirebaseStorage
 import FirebaseCore
 import FirebaseAuth
+import CoreLocation
 
 @MainActor
 class FirebaseManager: ObservableObject {
@@ -97,14 +98,22 @@ class FirebaseManager: ObservableObject {
         self.properties = fetchedProperties
     }
     
-    func addProperty(_ property: Property) async throws {
-        try await db.collection("properties").document(property.id).setData(property.toFirestoreData())
-        try await fetchProperties()
+    private func addProperty(_ property: Property) async throws -> Property {
+        let docRef = db.collection("properties").document(property.id)
+        
+        let encodedProperty = try Firestore.Encoder().encode(property)
+        try await docRef.setData(encodedProperty)
+        
+        return property
     }
     
-    func updateProperty(_ property: Property) async throws {
-        try await db.collection("properties").document(property.id).setData(property.toFirestoreData())
-        try await fetchProperties()
+    private func updateProperty(_ property: Property) async throws -> Property {
+        let docRef = db.collection("properties").document(property.id)
+        
+        let encodedProperty = try Firestore.Encoder().encode(property)
+        try await docRef.updateData(encodedProperty)
+        
+        return property
     }
     
     func deleteProperty(_ property: Property) async throws {
@@ -399,7 +408,106 @@ class FirebaseManager: ObservableObject {
         ]
         
         for property in sampleProperties {
-            try await addProperty(property)
+            _ = try await addProperty(property)
+        }
+    }
+    
+    // Update method to use geocoding before saving a property
+    func saveProperty(_ property: Property) async throws -> Property {
+        do {
+            // Attempt to geocode the address
+            let geocodedProperty = try await geocodeAddress(for: property)
+            
+            // If geocoding is successful, save the property with coordinates
+            if property.id.isEmpty {
+                return try await addProperty(geocodedProperty)
+            } else {
+                return try await updateProperty(geocodedProperty)
+            }
+        } catch {
+            // If geocoding fails, save the property without coordinates
+            print("⚠️ Geocoding failed: \(error.localizedDescription). Saving property without coordinates.")
+            
+            if property.id.isEmpty {
+                return try await addProperty(property)
+            } else {
+                return try await updateProperty(property)
+            }
+        }
+    }
+}
+
+extension FirebaseManager {
+    // Geocoding method to convert address to coordinates
+    func geocodeAddress(for property: Property) async throws -> Property {
+        var updatedProperty = property
+        
+        let geocoder = CLGeocoder()
+        let addressString = "\(property.address), \(property.city), \(property.country) \(property.zipCode)"
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            geocoder.geocodeAddressString(addressString) { placemarks, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                if let placemark = placemarks?.first,
+                   let location = placemark.location {
+                    updatedProperty.latitude = location.coordinate.latitude
+                    updatedProperty.longitude = location.coordinate.longitude
+                    continuation.resume(returning: updatedProperty)
+                } else {
+                    continuation.resume(throwing: NSError(domain: "GeocodeError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not find coordinates for the given address"]))
+                }
+            }
+        }
+    }
+    
+    // Method to update geolocation for all existing properties
+    func updateAllPropertiesGeolocation() async throws {
+        // Fetch all existing properties
+        try await fetchProperties()
+        
+        // Create a task group to process properties concurrently
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for property in properties {
+                // Skip properties that already have coordinates
+                guard property.latitude == 0.0 && property.longitude == 0.0 else {
+                    continue
+                }
+                
+                // Add a task to geocode each property
+                group.addTask {
+                    do {
+                        // Attempt to geocode the property
+                        let geocodedProperty = try await self.geocodeAddress(for: property)
+                        
+                        // Update the property in Firestore if coordinates were found
+                        if geocodedProperty.latitude != 0.0 && geocodedProperty.longitude != 0.0 {
+                            _ = try await self.updateProperty(geocodedProperty)
+                            print("✅ Updated geolocation for property: \(geocodedProperty.title)")
+                        }
+                    } catch {
+                        print("⚠️ Geocoding failed for property: \(property.title). Error: \(error.localizedDescription)")
+                    }
+                }
+            }
+            
+            // Wait for all tasks to complete
+            try await group.waitForAll()
+        }
+        
+        // Refresh properties after updates
+        try await fetchProperties()
+    }
+    
+    // Modify triggerGeolocationUpdate to be a fully asynchronous method
+    func triggerGeolocationUpdate() async {
+        do {
+            try await updateAllPropertiesGeolocation()
+        } catch {
+            print("Error updating properties geolocation: \(error.localizedDescription)")
         }
     }
 }

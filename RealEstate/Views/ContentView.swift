@@ -12,6 +12,8 @@ struct ContentView: View {
     @StateObject private var authManager = AuthManager.shared
     @State private var showingAdminView = false
     @State private var selectedTab = 0
+    @State private var showingGeolocationUpdateAlert = false
+    @State private var isUpdatingLocations = false
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -48,21 +50,63 @@ struct ContentView: View {
             }
             .tag(1)
             
+            // Map Tab
+            NavigationView {
+                PropertyListView(initialViewMode: .map)
+                    .environmentObject(firebaseManager)
+                    .environmentObject(authManager)
+            }
+            .tabItem {
+                Label {
+                    Text("Map")
+                } icon: {
+                    Image(systemName: "map.fill")
+                        .environment(\.symbolVariants, selectedTab == 2 ? .fill : .none)
+                }
+            }
+            .tag(2)
+            
             // Admin Tab (Only shown for admin users)
-            if firebaseManager.isAdmin {
+            if authManager.currentUser?.isAdmin == true {
                 NavigationView {
-                    AdminView()
-                        .environmentObject(firebaseManager)
+                    VStack {
+                        List {
+                            NavigationLink(destination: AdminView()) {
+                                Label("Admin Panel", systemImage: "gear")
+                            }
+                            
+                            Button(action: {
+                                showingGeolocationUpdateAlert = true
+                            }) {
+                                Label("Update Property Locations", systemImage: "map")
+                            }
+                        }
+                    }
+                    .navigationTitle("Admin Tools")
                 }
                 .tabItem {
-                    Label {
-                        Text("Manage")
-                    } icon: {
-                        Image(systemName: "square.and.pencil")
-                            .environment(\.symbolVariants, selectedTab == 2 ? .fill : .none)
-                    }
+                    Label("Admin", systemImage: "person.crop.circle.badge.checkmark")
                 }
-                .tag(2)
+                .tag(authManager.currentUser?.isAdmin ?? false ? 3 : 2)
+                .alert(isPresented: $showingGeolocationUpdateAlert) {
+                    Alert(
+                        title: Text("Update Property Locations"),
+                        message: Text("This will attempt to add geographic coordinates to all properties without location data. This may take a few minutes."),
+                        primaryButton: .default(Text("Update")) {
+                            Task {
+                                isUpdatingLocations = true
+                                await firebaseManager.triggerGeolocationUpdate()
+                                isUpdatingLocations = false
+                            }
+                        },
+                        secondaryButton: .cancel()
+                    )
+                }
+                .overlay(
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .opacity(isUpdatingLocations ? 1 : 0)
+                )
             }
             
             // Profile Tab
@@ -76,10 +120,10 @@ struct ContentView: View {
                     Text("Profile")
                 } icon: {
                     Image(systemName: "person.fill")
-                        .environment(\.symbolVariants, selectedTab == (firebaseManager.isAdmin ? 3 : 2) ? .fill : .none)
+                        .environment(\.symbolVariants, selectedTab == (authManager.currentUser?.isAdmin ?? false ? 4 : 3) ? .fill : .none)
                 }
             }
-            .tag(firebaseManager.isAdmin ? 3 : 2)
+            .tag(authManager.currentUser?.isAdmin ?? false ? 4 : 3)
         }
         .tint(Theme.primaryRed)
         .onAppear {
