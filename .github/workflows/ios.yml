@@ -41,15 +41,34 @@ jobs:
           echo "Project files:"
           find . -name "*.xcodeproj" -o -name "*.xcworkspace"
           
+      - name: Validate Project
+        run: |
+          if [ -d "*.xcworkspace" ]; then 
+            filetype_parameter="workspace"
+            file_to_build=$(find . -name "*.xcworkspace" -type d | head -1)
+          else 
+            filetype_parameter="project"
+            file_to_build=$(find . -name "*.xcodeproj" -type d | head -1)
+          fi
+          
+          if [ -z "$file_to_build" ]; then
+            echo "Error: No Xcode project or workspace found"
+            exit 1
+          fi
+          
+          echo "Validating $filetype_parameter: $file_to_build"
+          xcodebuild -list -"$filetype_parameter" "$file_to_build" || true
+          
+      - name: Clean Derived Data
+        run: |
+          rm -rf ~/Library/Developer/Xcode/DerivedData/*
+          
       - name: Build
         env:
           scheme: ${{ 'default' }}
           platform: ${{ 'iOS Simulator' }}
+          destination: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
         run: |
-          # xcrun xctrace returns via stderr, not the expected stdout
-          device=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//")
-          echo "Selected device: $device"
-          
           if [ "$scheme" = "default" ]; then 
             scheme=$(cat default)
           fi
@@ -61,6 +80,11 @@ jobs:
           else 
             filetype_parameter="project"
             file_to_build=$(find . -name "*.xcodeproj" -type d | head -1)
+          fi
+          
+          if [ -z "$file_to_build" ]; then
+            echo "Error: No Xcode project or workspace found"
+            exit 1
           fi
           
           echo "Building with $filetype_parameter: $file_to_build"
@@ -68,17 +92,28 @@ jobs:
           # Clean build folder first
           xcodebuild clean -scheme "$scheme" -"$filetype_parameter" "$file_to_build" || true
           
-          # Build with verbose output
-          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device" -verbose
+          # Build with specific settings
+          xcodebuild build-for-testing \
+            -scheme "$scheme" \
+            -"$filetype_parameter" "$file_to_build" \
+            -destination "$destination" \
+            -configuration Debug \
+            -enableCodeCoverage YES \
+            -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
+            -verbose \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO || {
+              echo "Build failed with exit code $?"
+              exit 1
+            }
           
       - name: Test
         env:
           scheme: ${{ 'default' }}
           platform: ${{ 'iOS Simulator' }}
+          destination: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
         run: |
-          device=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//")
-          echo "Selected device: $device"
-          
           if [ "$scheme" = "default" ]; then 
             scheme=$(cat default)
           fi
@@ -92,7 +127,25 @@ jobs:
             file_to_build=$(find . -name "*.xcodeproj" -type d | head -1)
           fi
           
+          if [ -z "$file_to_build" ]; then
+            echo "Error: No Xcode project or workspace found"
+            exit 1
+          fi
+          
           echo "Testing with $filetype_parameter: $file_to_build"
           
-          # Test with verbose output
-          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device" -verbose
+          # Test with specific settings
+          xcodebuild test-without-building \
+            -scheme "$scheme" \
+            -"$filetype_parameter" "$file_to_build" \
+            -destination "$destination" \
+            -configuration Debug \
+            -enableCodeCoverage YES \
+            -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
+            -verbose \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO || {
+              echo "Test failed with exit code $?"
+              exit 1
+            }
