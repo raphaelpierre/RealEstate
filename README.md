@@ -1,88 +1,117 @@
-Real Estate iOS App
-A modern iOS application for real estate property listings built with SwiftUI and Firebase.
+# RealEstate App
 
-Features:
+A modern iOS application for browsing and managing real estate properties, built with SwiftUI and following MVVM architecture.
 
-🏠 Property Listings
-View detailed property information
-Search and filter properties
-Sort by price, bedrooms, and date added
+## Features
 
-👤 User Authentication
-Email/password authentication
-User profile management
-Password reset functionality
+### Property Management
+- Browse properties with detailed information
+- View property details including price, location, and amenities
+- Search and filter properties by various criteria
+- Save favorite properties
+- View property images and descriptions
+- Track property views and interactions
 
-👑 Admin Panel
-Manage property listings
-Add, edit, and delete properties
-Upload property images
+### User Experience
+- Multi-language support (English and French)
+- Currency conversion and formatting
+- Area unit conversion (sq ft to m²)
+- Dark mode support
+- Responsive and adaptive UI
+- Smooth animations and transitions
 
-🎨 Modern UI/UX
-Clean and intuitive interface
-Responsive design
-Image galleries
-Loading states and error handling
+### User Profile
+- User authentication and profile management
+- Customizable user preferences
+- Language and currency settings
+- Favorite properties management
+- User activity tracking
 
-Requirements:
+## Technical Implementation
 
-iOS 15.0+
-Xcode 13.0+
-Swift 5.5+
-Firebase account
+### Architecture
+- MVVM (Model-View-ViewModel) architecture
+- SwiftUI for modern UI development
+- Combine framework for reactive programming
+- Protocol-oriented programming principles
 
-Installation:
-Clone the repository 
-git clone https://github.com/raphaelpierre/RealEstate.git 
+### Key Components
+
+#### Views
+- `PropertyListView`: Main property browsing interface
+- `PropertyDetailView`: Detailed property information
+- `ProfileView`: User profile and settings
+- `CurrencySettingsView`: Currency preferences
+- `LanguageSwitcher`: Language selection interface
+
+#### ViewModels
+- `PropertyListViewModel`: Manages property data and filtering
+- `PropertyDetailViewModel`: Handles property detail logic
+- `ProfileViewModel`: Manages user profile data
+- `CurrencyManager`: Handles currency conversion and formatting
+
+#### Models
+- `Property`: Core property data model
+- `User`: User profile and preferences
+- `Currency`: Currency conversion and formatting
+- `Localization`: Multi-language support
+
+### Data Management
+- Local data persistence
+- Real-time data updates
+- Efficient data caching
+- Background data refresh
+
+### UI/UX Features
+- Custom SwiftUI components
+- Responsive layouts
+- Accessibility support
+- Dynamic type support
+- Adaptive color schemes
+
+## Requirements
+
+- iOS 15.0+
+- Xcode 13.0+
+- Swift 5.5+
+- macOS 12.0+ (for development)
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/raphaelpierre/RealEstate.git
+```
+
+2. Open the project in Xcode:
+```bash
 cd RealEstate
-Set up Firebase
-Create a new Firebase project
-Add an iOS app in Firebase console
-Download GoogleService-Info.plist
-Add it to the project (don't commit this file)
-Open the project in Xcode open RealEstate.xcodeproj
-Build and run the project
-Configuration
-Firebase Setup
-Enable Authentication with Email/Password
-Set up Cloud Firestore
-Configure Storage for images
-Security Rules
-Configure Firestore rules
-Set up Storage rules
+open RealEstate.xcodeproj
+```
 
-Architecture:
-SwiftUI for UI
-MVVM architecture
-Firebase for backend
-Async/await for asynchronous operations
+3. Build and run the project in Xcode
 
-Project Structure:
-RealEstate/ 
-├── Models/ 
-│ ├── Property.swift 
-│ └── User.swift 
-├── Views/ 
-│ ├── PropertyListView.swift 
-│ ├── PropertyDetailView.swift 
-│ ├── LoginView.swift 
-│ └── AdminView.swift 
-├── Services/ 
-│ └── FirebaseManager.swift 
-└── Supporting Files/ 
-└── Info.plist
+## Dependencies
 
-Contributing:
-Fork the repository
-Create your feature branch (git checkout -b feature/AmazingFeature)
-Commit your changes (git commit -m 'Add some AmazingFeature')
-Push to the branch (git push origin feature/AmazingFeature)
-Open a Pull Request
+- SwiftUI
+- Combine
+- Foundation
+- CoreData (for local storage)
 
-License:
-This project is licensed under the MIT License - see the LICENSE file for details
+## Contributing
 
-Acknowledgments:
-SwiftUI for the modern UI framework
-Firebase for backend services
-The iOS development community
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- SwiftUI team for the amazing framework
+- Apple for providing excellent development tools
+- Contributors and maintainers of the project
