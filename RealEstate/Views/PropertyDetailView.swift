@@ -10,6 +10,7 @@ struct PropertyDetailView: View {
     @State private var errorMessage = ""
     @State private var imageLoadError: String?
     @State private var showImageError = false
+    @State private var failedImageURLs: Set<String> = []
     let property: Property
     @State private var currentProperty: Property
     @State private var isFavoriteProcessing = false
@@ -62,12 +63,27 @@ struct PropertyDetailView: View {
                             .resizable()
                             .scaledToFill()
                     case .failure(let error):
-                        Image(systemName: "photo")
-                            .foregroundColor(Theme.textWhite.opacity(0.5))
-                            .onAppear {
-                                imageLoadError = "Failed to load image from URL: \(imageURL)\nError: \(error.localizedDescription)"
-                                showImageError = true
+                        VStack {
+                            Image(systemName: "photo")
+                                .font(.system(size: 40))
+                                .foregroundColor(Theme.textWhite.opacity(0.5))
+                            if failedImageURLs.contains(imageURL) {
+                                Button("Retry") {
+                                    failedImageURLs.remove(imageURL)
+                                }
+                                .foregroundColor(Theme.primaryRed)
+                                .padding(.top, 8)
                             }
+                        }
+                        .onAppear {
+                            if !failedImageURLs.contains(imageURL) {
+                                failedImageURLs.insert(imageURL)
+                                if imageLoadError == nil {
+                                    imageLoadError = "Some images failed to load. Tap 'Retry' to attempt loading again."
+                                    showImageError = true
+                                }
+                            }
+                        }
                     @unknown default:
                         EmptyView()
                     }
