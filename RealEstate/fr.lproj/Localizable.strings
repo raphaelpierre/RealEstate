@@ -1,0 +1,379 @@
+// General
+"app_name" = "Sidnapp";
+"loading" = "Chargement...";
+"error" = "Erreur";
+"retry" = "Réessayer";
+"cancel" = "Annuler";
+"save" = "Enregistrer";
+"delete" = "Supprimer";
+"edit" = "Modifier";
+"done" = "Terminé";
+
+// Authentication
+"Sign In" = "Se connecter";
+"Email" = "Email";
+"Enter your email" = "Entrez votre email";
+"Password" = "Mot de passe";
+"Enter your password" = "Entrez votre mot de passe";
+"Don't have an account?" = "Vous n'avez pas de compte ?";
+"logout" = "Déconnexion";
+"profile" = "Profil";
+"sign_out" = "Déconnexion";
+"sign_out_description" = "Se déconnecter de votre compte";
+
+// Property Listings
+"properties" = "Propriétés";
+"property_details" = "Détails du bien";
+"price" = "Prix";
+"bedrooms" = "Chambres";
+"bathrooms" = "Salles de bain";
+"area" = "Superficie";
+"address" = "Adresse";
+"description" = "Description";
+"contact" = "Contact";
+"favorites" = "Favoris";
+"no_favorites" = "Vous n'avez pas encore de favoris";
+"add_to_favorites" = "Ajouter aux favoris";
+"remove_from_favorites" = "Retirer des favoris";
+"view_favorites_description" = "Voir vos propriétés favorites";
+"view_favorite_properties" = "Voir les propriétés favorites";
+
+// Filters
+"filters" = "Filtres";
+"min_price" = "Prix minimum";
+"max_price" = "Prix maximum";
+"property_type" = "Type de propriété";
+"sort_by" = "Trier par";
+"apply_filters" = "Appliquer les filtres";
+"reset_filters" = "Réinitialiser les filtres";
+"more_filters" = "Plus de filtres";
+"price_range" = "Fourchette de prix";
+"search_properties" = "Rechercher des propriétés...";
+
+// Property Types
+"house" = "Maison";
+"apartment" = "Appartement";
+"condo" = "Copropriété";
+"villa" = "Villa";
+"land" = "Terrain";
+"all_types" = "Tous les types";
+
+// Property Purpose
+"all_purpose" = "Tous les buts";
+"buy" = "Acheter";
+"rent" = "Louer";
+"seasonal" = "Saisonnière";
+
+// Price Ranges
+"all_prices" = "Tous les prix";
+"under_200k" = "Moins de 200k$";
+"under_500k" = "200k$ - 500k$";
+"over_500k" = "Plus de 500k$";
+"under_200k_format" = "Moins de 200k $SYMBOL";
+"under_500k_format" = "200k-500k $SYMBOL";
+"over_500k_format" = "Plus de 500k $SYMBOL";
+
+// Price Ranges - Euro
+"Moins de 200k€" = "Moins de 200k€";
+"200k-500k€" = "200k-500k€";
+"Plus de 500k€" = "Plus de 500k€";
+
+// Price Ranges - CFA
+"Moins de 200k CFA" = "Moins de 200k CFA";
+"200k-500k CFA" = "200k-500k CFA";
+"Plus de 500k CFA" = "Plus de 500k CFA";
+
+// Area Ranges
+"any_size" = "Toutes tailles";
+"small_area" = "< 100m²";
+"medium_area" = "100-200m²";
+"large_area" = "200-500m²";
+"xlarge_area" = "> 500m²";
+"any" = "Tous";
+
+// Admin
+"admin" = "Admin";
+"admin_tools" = "Outils d'administration";
+"add_property" = "Ajouter un bien";
+"add_property_description" = "Ajouter une nouvelle annonce immobilière";
+"edit_property" = "Modifier la propriété";
+"delete_property" = "Supprimer la propriété";
+"property_title" = "Titre de la propriété";
+"upload_images" = "Télécharger des images";
+"select_location" = "Sélectionner l'emplacement";
+"update_property_locations" = "Mettre à jour les emplacements";
+"update_property_locations_message" = "Cela tentera d'ajouter des coordonnées géographiques à toutes les propriétés sans données de localisation. Cela peut prendre quelques minutes.";
+"property_management" = "Gestion des propriétés";
+"admin_property_description" = "Ajouter, modifier ou supprimer des propriétés";
+"my_properties" = "Mes Propriétés";
+"manage_my_properties_description" = "Voir et gérer vos annonces immobilières";
+"manage_all_properties" = "Gérer Toutes les Propriétés";
+"manage_all_properties_description" = "Voir et gérer toutes les annonces immobilières (Admin uniquement)";
+"Enable Admin Mode" = "Activer le mode administrateur";
+"Disable Admin Mode" = "Désactiver le mode administrateur";
+
+// Map
+"map" = "Carte";
+"list" = "Liste";
+"view_on_map" = "Voir sur la carte";
+"display_mode" = "Mode d'affichage";
+
+// Errors
+"login_error" = "Échec de connexion. Veuillez vérifier vos identifiants.";
+"signup_error" = "Échec de création de compte. Veuillez réessayer.";
+"load_properties_error" = "Échec de chargement des propriétés. Veuillez réessayer.";
+"save_property_error" = "Échec d'enregistrement de la propriété. Veuillez réessayer.";
+"network_error" = "Erreur réseau. Veuillez vérifier votre connexion.";
+
+// Additional Terms
+"square_meters" = "mètres carrés";
+"square_feet" = "pieds carrés";
+"for_sale" = "À vendre";
+"for_rent" = "À louer";
+"monthly" = "par mois";
+"yearly" = "par an";
+"furnished" = "Meublé";
+"unfurnished" = "Non meublé";
+"new_construction" = "Construction neuve";
+"year_built" = "Année de construction";
+"garage" = "Garage";
+"parking" = "Stationnement";
+"balcony" = "Balcon";
+"garden" = "Jardin";
+"pool" = "Piscine";
+"elevator" = "Ascenseur";
+"air_conditioning" = "Climatisation";
+"heating" = "Chauffage";
+"security_system" = "Système de sécurité";
+
+// Success Messages
+"property_added_success" = "Propriété ajoutée avec succès";
+"property_updated_success" = "Propriété mise à jour avec succès";
+"property_deleted_success" = "Propriété supprimée avec succès";
+"account_created_success" = "Compte créé avec succès";
+"password_reset_email_sent" = "Email de réinitialisation du mot de passe envoyé";
+"location_permission_needed" = "L'autorisation de localisation est nécessaire pour afficher les propriétés à proximité";
+"no_properties_found" = "Aucune propriété trouvée";
+"filter_no_results" = "Aucun résultat pour ces filtres";
+"property_created_success" = "Propriété créée avec succès !";
+"property_updated_success" = "Propriété mise à jour avec succès !";
+"success" = "Succès";
+
+/* Property Form */
+"basic_info" = "Infos de base";
+"enter_property_title" = "Entrez le titre de la propriété";
+"enter_property_description" = "Entrez la description de la propriété";
+"enter_address" = "Entrez l'adresse";
+"enter_city" = "Entrez la ville";
+"enter_zip_code" = "Entrez le code postal";
+"enter_country" = "Entrez le pays";
+"photos" = "Photos";
+"add_photos" = "Ajouter des photos";
+"processing_images" = "Traitement des images...";
+"whatsapp" = "WhatsApp";
+"whatsapp_example" = "ex: +1234567890";
+"previous" = "Précédent";
+"next" = "Suivant";
+
+/* Property Detail View */
+"features" = "Caractéristiques";
+"schedule_viewing" = "Planifier une visite";
+"contact_agent" = "Contacter l'agent";
+"save_property" = "Sauvegarder";
+
+/* Language Selection */
+"select_language" = "Choisir la langue";
+"change_language_description" = "Changer la langue de l'application";
+
+/* Profile View */
+"menu" = "Menu";
+"my_account" = "Mon Compte";
+"session" = "Session";
+"welcome_user" = "Bienvenue sur Sidnapp";
+"currency_settings" = "Paramètres de devise";
+"default_currency" = "Devise par défaut";
+"currency_settings_description" = "Choisissez votre devise préférée pour l'affichage des prix";
+"currency_updated_success" = "Devise par défaut mise à jour avec succès";
+"currency_update_error" = "Échec de la mise à jour de la devise par défaut";
+
+/* Demo App */
+"localization_demo" = "Démo de Localisation";
+"examples" = "Exemples";
+"view_property_details" = "Voir les Détails du Bien";
+"language" = "Langue";
+
+/* ContentView */
+"home" = "Accueil";
+"update" = "Mettre à jour";
+
+/* Services Tab */
+"our_services" = "Nos Services";
+"property_valuation" = "Évaluation de Biens";
+"property_valuation_desc" = "Obtenez une évaluation précise de la valeur marchande de votre bien avec notre service d'évaluation professionnel.";
+"property_management" = "Gestion Immobilière";
+"property_management_desc" = "Laissez-nous gérer votre propriété au quotidien, du filtrage des locataires à l'entretien.";
+"legal_assistance" = "Assistance Juridique";
+"legal_assistance_desc" = "Nos experts juridiques vous guideront à travers tous les aspects du droit et des transactions immobilières.";
+"mortgage_consulting" = "Conseil en Prêt Immobilier";
+"mortgage_consulting_desc" = "Recevez des conseils personnalisés sur les options de prêt et trouvez la meilleure solution de financement pour vos besoins.";
+"renovation_services" = "Services de Rénovation";
+"renovation_services_desc" = "Transformez votre propriété avec nos services professionnels de rénovation et de design d'intérieur.";
+"real_estate_news" = "Actualités Immobilières";
+"real_estate_news_desc" = "Restez informé des dernières tendances, analyses de marché et actualités immobilières de nos experts.";
+"contact_us" = "Contactez-nous";
+
+/* Currency Options */
+"select_currency" = "Sélectionner la Devise";
+"us_dollars" = "Dollars US";
+"euros" = "Euros";
+"francs_cfa" = "Francs CFA";
+"currency_info" = "Les prix seront affichés dans la devise sélectionnée";
+
+/* Monetization View */
+"upgrade_options" = "Options de mise à niveau";
+"upgrade_your_experience" = "Améliorez votre expérience";
+"choose_how_you_want_to_enhance" = "Choisissez comment améliorer votre parcours immobilier";
+"premium_subscription" = "Abonnement Premium";
+"unlock_all_premium_features" = "Débloquez toutes les fonctionnalités premium avec un abonnement mensuel, annuel ou à vie";
+"property_listing_packages" = "Forfaits d'annonces immobilières";
+"choose_the_perfect_package" = "Choisissez le forfait idéal pour présenter votre propriété aux acheteurs potentiels";
+"in_app_purchases" = "Achats intégrés";
+"enhance_your_experience_with_individual" = "Améliorez votre expérience avec des fonctionnalités et outils premium individuels";
+"restore_purchases" = "Restaurer les achats";
+"close" = "Fermer";
+
+/* Subscription View */
+"premium_plans" = "Forfaits Premium";
+"unlock_premium_features" = "Débloquez des fonctionnalités premium pour booster votre activité immobilière";
+"monthly" = "Mensuel";
+"yearly" = "Annuel";
+"lifetime" = "À vie";
+"save_25" = "Économisez 25%";
+"best_value" = "Meilleure valeur";
+"premium_features" = "Fonctionnalités Premium";
+"unlimited_property_listings" = "Annonces immobilières illimitées";
+"featured_placement" = "Placement privilégié dans les résultats de recherche";
+"advanced_analytics" = "Tableau de bord d'analyse avancée";
+"priority_customer_support" = "Support client prioritaire";
+"no_advertisements" = "Sans publicités";
+"virtual_staging_tools" = "Outils de mise en scène virtuelle";
+"custom_branding_options" = "Options de personnalisation de marque";
+"api_access" = "Accès API";
+"subscribe_now" = "S'abonner maintenant";
+"subscription_will_automatically_renew" = "L'abonnement se renouvellera automatiquement sauf si le renouvellement automatique est désactivé au moins 24 heures avant la fin de la période en cours. Vous pouvez gérer vos abonnements dans les paramètres de votre compte.";
+
+/* Listing Packages View */
+"listing_packages" = "Forfaits d'annonces";
+"list_your_property" = "Publiez votre propriété";
+"choose_the_perfect_package_to_showcase" = "Choisissez le forfait idéal pour mettre en valeur votre propriété";
+"basic" = "Basique";
+"standard" = "Standard";
+"premium" = "Premium";
+"essential_visibility" = "Visibilité essentielle";
+"most_popular" = "Le plus populaire";
+"maximum_exposure" = "Exposition maximale";
+"package_details" = "Détails du forfait";
+"single_property_listing" = "Annonce d'une seule propriété";
+"up_to_5_photos" = "Jusqu'à 5 photos";
+"basic_property_details" = "Détails de base de la propriété";
+"contact_information" = "Coordonnées";
+"up_to_15_photos" = "Jusqu'à 15 photos";
+"detailed_property_description" = "Description détaillée de la propriété";
+"floor_plan_upload" = "Téléchargement du plan d'étage";
+"featured_for_7_days" = "Mise en avant pendant 7 jours";
+"unlimited_photos" = "Photos illimitées";
+"hd_video_tour" = "Visite vidéo HD";
+"3d_virtual_tour" = "Visite virtuelle 3D";
+"featured_for_30_days" = "Mise en avant pendant 30 jours";
+"priority_placement" = "Placement prioritaire dans la recherche";
+"social_media_promotion" = "Promotion sur les réseaux sociaux";
+"continue_to_payment" = "Continuer vers le paiement";
+"by_proceeding" = "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité. L'annonce sera active pendant";
+"from_the_date" = "à partir de la date de publication.";
+"payment" = "Paiement";
+"payment_details_will_be_implemented" = "Les détails de paiement seront implémentés ici";
+
+/* In-App Purchases View */
+"in_app_purchases" = "Achats intégrés";
+"enhance_your_experience" = "Améliorez votre expérience";
+"unlock_premium_features_and_tools" = "Débloquez des fonctionnalités et outils premium pour rendre votre parcours immobilier encore meilleur";
+"premium_features" = "Fonctionnalités Premium";
+"credit_packs" = "Packs de crédits";
+"pro_tools" = "Outils Pro";
+"advanced_search_filters" = "Filtres de recherche avancés";
+"unlock_powerful_search" = "Débloquez des filtres de recherche puissants pour trouver votre propriété idéale plus rapidement";
+"property_price_history" = "Historique des prix des propriétés";
+"view_complete_price_history" = "Consultez l'historique complet des prix et les tendances du marché pour n'importe quelle propriété";
+"neighborhood_analytics" = "Analyse de quartier";
+"get_detailed_insights" = "Obtenez des informations détaillées sur les quartiers, y compris les écoles, les taux de criminalité et les commodités";
+"10_contact_credits" = "10 crédits de contact";
+"reveal_contact_information_10" = "Révélez les coordonnées de 10 annonces immobilières";
+"25_contact_credits" = "25 crédits de contact";
+"reveal_contact_information_25" = "Révélez les coordonnées de 25 annonces immobilières";
+"50_contact_credits" = "50 crédits de contact";
+"reveal_contact_information_50" = "Révélez les coordonnées de 50 annonces immobilières";
+"mortgage_calculator_pro" = "Calculateur d'hypothèque Pro";
+"advanced_mortgage_calculator" = "Calculateur d'hypothèque avancé avec taux d'intérêt personnalisés et calendriers de paiement";
+"property_comparison_tool" = "Outil de comparaison de propriétés";
+"compare_up_to_5_properties" = "Comparez jusqu'à 5 propriétés côte à côte avec des analyses détaillées";
+"investment_roi_calculator" = "Calculateur de ROI d'investissement";
+"calculate_potential_return" = "Calculez le retour potentiel sur investissement pour les propriétés locatives";
+"popular" = "Populaire";
+"purchase" = "Acheter";
+"confirm_purchase" = "Confirmer l'achat";
+"would_you_like_to_purchase" = "Souhaitez-vous acheter";
+
+/* Admin Profile Menu */
+"admin_section" = "Section Admin";
+"admin_section_description" = "Accéder aux outils d'administration";
+"user_management" = "Gestion des utilisateurs";
+"user_management_description" = "Gérer les comptes utilisateurs, les rôles et les permissions";
+"system_settings" = "Paramètres système";
+"system_settings_description" = "Configurer les paramètres globaux de l'application";
+"analytics_dashboard" = "Tableau de Bord Analytique";
+"analytics_dashboard_description" = "Consulter les statistiques et les rapports d'utilisation";
+"admin_panel" = "Panneau d'administration";
+
+/* Profile Menu - Admin Options */
+"admin_profile_section" = "Options d'administration";
+"admin_profile_section_description" = "Options d'administration disponibles dans votre profil";
+"admin_dashboard" = "Tableau de bord admin";
+"admin_dashboard_description" = "Accéder au tableau de bord d'administration";
+"manage_properties_profile" = "Gérer les propriétés";
+"manage_properties_profile_description" = "Ajouter, modifier ou supprimer des propriétés";
+"manage_users_profile" = "Gérer les utilisateurs";
+"manage_users_profile_description" = "Gérer les comptes utilisateurs et les permissions";
+"update_locations_profile" = "Mettre à jour les emplacements";
+"update_locations_profile_description" = "Mettre à jour les coordonnées géographiques des propriétés";
+"system_settings_profile" = "Paramètres système";
+"system_settings_profile_description" = "Configurer les paramètres de l'application";
+"view_admin_logs_profile" = "Voir les journaux admin";
+"view_admin_logs_profile_description" = "Consulter les journaux des actions administratives";
+
+// Analytics Dashboard
+"total_properties" = "Total des Propriétés";
+"average_price" = "Prix Moyen";
+"property_types" = "Types de Propriétés";
+"property_purposes" = "Objectifs des Propriétés";
+"price_distribution" = "Distribution des Prix";
+"property_features" = "Caractéristiques des Propriétés";
+"min_price" = "Prix Minimum";
+"max_price" = "Prix Maximum";
+"average_area" = "Surface Moyenne";
+"average_bedrooms" = "Chambres Moyennes";
+"average_bathrooms" = "Salles de Bain Moyennes";
+
+// User Management
+"search_users" = "Rechercher des utilisateurs...";
+"no_users_found" = "Aucun utilisateur trouvé";
+"user_info" = "Informations utilisateur";
+"display_name" = "Nom d'affichage";
+"permissions" = "Permissions";
+"admin_access" = "Accès administrateur";
+"delete_user" = "Supprimer l'utilisateur";
+"delete_user_confirmation" = "Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action ne peut pas être annulée.";
+"edit_user" = "Modifier l'utilisateur";
+"unknown_error" = "Une erreur inconnue s'est produite";
+
+// New language restart message
+"language_restart_message" = "Veuillez redémarrer l'application pour voir les changements de langue"; 

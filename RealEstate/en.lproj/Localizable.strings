@@ -1,0 +1,278 @@
+// General
+"app_name" = "Sidnapp";
+"loading" = "Loading...";
+"error" = "Error";
+"retry" = "Retry";
+"cancel" = "Cancel";
+"save" = "Save";
+"delete" = "Delete";
+"edit" = "Edit";
+"done" = "Done";
+
+// Authentication
+"Sign In" = "Sign In";
+"Email" = "Email";
+"Enter your email" = "Enter your email";
+"Password" = "Password";
+"Enter your password" = "Enter your password";
+"Don't have an account?" = "Don't have an account?";
+"logout" = "Log Out";
+"profile" = "Profile";
+"sign_out" = "Sign Out";
+"sign_out_description" = "Sign out of your account";
+
+// Property Listings
+"properties" = "Properties";
+"property_details" = "Property Details";
+"price" = "Price";
+"bedrooms" = "Bedrooms";
+"bathrooms" = "Bathrooms";
+"area" = "Area";
+"address" = "Address";
+"description" = "Description";
+"contact" = "Contact";
+"favorites" = "Favorites";
+"no_favorites" = "You don't have any favorites yet";
+"add_to_favorites" = "Add to Favorites";
+"remove_from_favorites" = "Remove from Favorites";
+"view_favorites_description" = "View your favorite properties";
+
+// Filters
+"filters" = "Filters";
+"min_price" = "Min Price";
+"max_price" = "Max Price";
+"property_type" = "Property Type";
+"sort_by" = "Sort By";
+"apply_filters" = "Apply Filters";
+"reset_filters" = "Reset Filters";
+"more_filters" = "More Filters";
+"price_range" = "Price Range";
+"search_properties" = "Search properties...";
+
+// Property Types
+"house" = "House";
+"apartment" = "Apartment";
+"condo" = "Condo";
+"villa" = "Villa";
+"land" = "Land";
+"all_types" = "All Types";
+
+// Property Purpose
+"all_purpose" = "All Purpose";
+"buy" = "Buy";
+"rent" = "Rent";
+"seasonal" = "Seasonal";
+
+// Price Ranges
+"all_prices" = "All Prices";
+"under_200k" = "Under $200k";
+"under_500k" = "$200k - $500k";
+"over_500k" = "Over $500k";
+"under_200k_format" = "Under $SYMBOL200k";
+"under_500k_format" = "$SYMBOL200k-$SYMBOL500k";
+"over_500k_format" = "Over $SYMBOL500k";
+
+// Price Ranges - Euro
+"Moins de 200k€" = "Under 200k€";
+"200k-500k€" = "200k-500k€";
+"Plus de 500k€" = "Over 500k€";
+
+// Price Ranges - CFA
+"Moins de 200k CFA" = "Under 200k CFA";
+"200k-500k CFA" = "200k-500k CFA";
+"Plus de 500k CFA" = "Over 500k CFA";
+
+// Area Ranges
+"any_size" = "Any Size";
+"small_area" = "< 100m²";
+"medium_area" = "100-200m²";
+"large_area" = "200-500m²";
+"xlarge_area" = "> 500m²";
+"any" = "Any";
+
+// Admin
+"admin" = "Admin";
+"admin_tools" = "Admin Tools";
+"add_property" = "Add Property";
+"edit_property" = "Edit Property";
+"delete_property" = "Delete Property";
+"property_title" = "Property Title";
+"upload_images" = "Upload Images";
+"select_location" = "Select Location";
+"update_property_locations" = "Update Property Locations";
+"update_property_locations_message" = "This will attempt to add geographic coordinates to all properties without location data. This may take a few minutes.";
+"property_management" = "Property Management";
+"admin_property_description" = "Add, edit, or remove properties";
+
+// Map
+"map" = "Map";
+"list" = "List";
+"view_on_map" = "View on Map";
+"display_mode" = "Display Mode";
+
+// Errors
+"login_error" = "Failed to login. Please check your credentials.";
+"signup_error" = "Failed to create account. Please try again.";
+"load_properties_error" = "Failed to load properties. Please try again.";
+"save_property_error" = "Failed to save property. Please try again.";
+"network_error" = "Network error. Please check your connection.";
+
+// Additional Terms
+"square_meters" = "square meters";
+"square_feet" = "square feet";
+"for_sale" = "For Sale";
+"for_rent" = "For Rent";
+"monthly" = "monthly";
+"yearly" = "yearly";
+"furnished" = "Furnished";
+"unfurnished" = "Unfurnished";
+"new_construction" = "New Construction";
+"year_built" = "Year Built";
+"garage" = "Garage";
+"parking" = "Parking";
+"balcony" = "Balcony";
+"garden" = "Garden";
+"pool" = "Pool";
+"elevator" = "Elevator";
+"air_conditioning" = "Air Conditioning";
+"heating" = "Heating";
+"security_system" = "Security System";
+
+// Success Messages
+"property_added_success" = "Property added successfully";
+"property_updated_success" = "Property updated successfully";
+"property_deleted_success" = "Property deleted successfully";
+"account_created_success" = "Account created successfully";
+"password_reset_email_sent" = "Password reset email sent";
+"location_permission_needed" = "Location permission is needed to show nearby properties";
+"no_properties_found" = "No properties found";
+"filter_no_results" = "No results for these filters";
+"property_created_success" = "Property created successfully!";
+"property_updated_success" = "Property updated successfully!";
+"success" = "Success";
+
+/* Property Form */
+"basic_info" = "Basic Info";
+"enter_property_title" = "Enter property title";
+"enter_property_description" = "Enter property description";
+"enter_address" = "Enter address";
+"enter_city" = "Enter city";
+"enter_zip_code" = "Enter ZIP code";
+"enter_country" = "Enter country";
+"photos" = "Photos";
+"add_photos" = "Add Photos";
+"processing_images" = "Processing images...";
+"whatsapp" = "WhatsApp";
+"whatsapp_example" = "e.g. +1234567890";
+"previous" = "Previous";
+"next" = "Next";
+
+/* Property Detail View */
+"features" = "Features";
+"schedule_viewing" = "Schedule Viewing";
+"contact_agent" = "Contact Agent";
+"save_property" = "Save Property";
+
+/* Language Selection */
+"select_language" = "Select Language";
+"change_language_description" = "Change application language";
+
+/* Profile View */
+"menu" = "Menu";
+"my_account" = "My Account";
+"session" = "Session";
+"welcome_user" = "Welcome to Sidnapp";
+"currency_settings" = "Currency Settings";
+"default_currency" = "Default Currency";
+"currency_settings_description" = "Choose your preferred currency for displaying prices";
+"currency_updated_success" = "Default currency updated successfully";
+"currency_update_error" = "Failed to update default currency";
+
+/* Demo App */
+"localization_demo" = "Localization Demo";
+"examples" = "Examples";
+"view_property_details" = "View Property Details";
+"language" = "Language";
+
+/* ContentView */
+"home" = "Home";
+"update" = "Update";
+
+/* Services Tab */
+"our_services" = "Our Services";
+"property_valuation" = "Property Valuation";
+"property_valuation_desc" = "Get an accurate assessment of your property's market value with our professional valuation service.";
+"property_management" = "Property Management";
+"property_management_desc" = "Let us handle the day-to-day management of your property, from tenant screening to maintenance.";
+"legal_assistance" = "Legal Assistance";
+"legal_assistance_desc" = "Our legal experts will guide you through all aspects of real estate law and transactions.";
+"mortgage_consulting" = "Mortgage Consulting";
+"mortgage_consulting_desc" = "Get personalized advice on mortgage options and find the best financing solution for your needs.";
+"renovation_services" = "Renovation Services";
+"renovation_services_desc" = "Transform your property with our professional renovation and interior design services.";
+"real_estate_news" = "Real Estate News";
+"real_estate_news_desc" = "Stay updated with the latest trends, market insights, and property news from our expert analysts.";
+"contact_us" = "Contact Us";
+
+/* Currency Options */
+"select_currency" = "Select Currency";
+"us_dollars" = "US Dollars";
+"euros" = "Euros";
+"francs_cfa" = "Francs CFA";
+"currency_info" = "Prices will be displayed in the selected currency";
+
+// Properties
+"property_details" = "Property Details";
+"property_location" = "Location";
+"property_features" = "Features";
+"property_price" = "Price";
+"property_type" = "Property Type";
+"property_size" = "Size";
+"property_bedrooms" = "Bedrooms";
+"property_bathrooms" = "Bathrooms";
+"property_description" = "Description";
+"property_amenities" = "Amenities";
+"property_contact" = "Contact";
+"property_management" = "Property Management";
+"add_property" = "Add Property";
+"add_property_description" = "Add a new property listing";
+"my_properties" = "My Properties";
+"manage_my_properties_description" = "View and manage your property listings";
+"manage_all_properties" = "Manage All Properties";
+"manage_all_properties_description" = "View and manage all property listings (Admin only)";
+
+/* Admin Profile Menu */
+"admin_section" = "Admin Section";
+"admin_section_description" = "Access administrative tools";
+"user_management" = "User Management";
+"user_management_description" = "Manage user accounts, roles, and permissions";
+"system_settings" = "System Settings";
+"system_settings_description" = "Configure global application settings";
+"analytics_dashboard" = "Analytics Dashboard";
+"analytics_dashboard_description" = "View usage statistics and reports";
+"admin_panel" = "Admin Panel";
+
+// Analytics Dashboard
+"total_properties" = "Total Properties";
+"average_price" = "Average Price";
+"property_types" = "Property Types";
+"property_purposes" = "Property Purposes";
+"price_distribution" = "Price Distribution";
+"average_area" = "Average Area";
+"average_bedrooms" = "Average Bedrooms";
+"average_bathrooms" = "Average Bathrooms";
+
+// User Management
+"search_users" = "Search users...";
+"no_users_found" = "No users found";
+"user_info" = "User Information";
+"display_name" = "Display Name";
+"permissions" = "Permissions";
+"admin_access" = "Admin Access";
+"delete_user" = "Delete User";
+"delete_user_confirmation" = "Are you sure you want to delete this user? This action cannot be undone.";
+"edit_user" = "Edit User";
+"unknown_error" = "An unknown error occurred";
+
+// New string for language change restart message
+"language_restart_message" = "Please restart the application to see the language changes"; 
