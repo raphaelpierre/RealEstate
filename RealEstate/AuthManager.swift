@@ -18,7 +18,11 @@ final class AuthManager: ObservableObject {
     
     @Published private(set) var currentUser: User?
     @Published private(set) var isAuthenticated = false
+    #if DEBUG
+    @Published var isAdmin = false // Writable for testing
+    #else
     @Published private(set) var isAdmin = false
+    #endif
     @Published var errorMessage: String?
     @Published var showMessage = false
     @Published var message = ""
@@ -134,43 +138,79 @@ final class AuthManager: ObservableObject {
     
     func signInWithGoogle() async throws {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
+            print("Error: No client ID found in Firebase configuration")
             throw AuthError.noClientId
         }
         
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
+            print("Error: No root view controller found")
             throw AuthError.noRootViewController
         }
         
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
         
-        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
-        guard let idToken = result.user.idToken?.tokenString else {
-            throw AuthError.userNotAuthenticated
-        }
-        
-        let credential = GoogleAuthProvider.credential(
-            withIDToken: idToken,
-            accessToken: result.user.accessToken.tokenString
-        )
-        
-        let authResult = try await auth.signIn(with: credential)
-        
-        // Check if this is a new user
-        let userDoc = try? await db.collection("users").document(authResult.user.uid).getDocument()
-        if userDoc == nil || !userDoc!.exists {
-            // Create new user document
-            let user = User(
-                id: authResult.user.uid,
-                email: authResult.user.email ?? "",
-                displayName: authResult.user.displayName
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            guard let idToken = result.user.idToken?.tokenString else {
+                print("Error: No ID token received from Google")
+                throw AuthError.userNotAuthenticated
+            }
+            
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: result.user.accessToken.tokenString
             )
-            try await db.collection("users").document(user.id).setData(user.toFirestoreData())
+            
+            let authResult = try await auth.signIn(with: credential)
+            
+            // Get profile image URL if available
+            let photoURL = result.user.profile?.imageURL(withDimension: 200)?.absoluteString
+            
+            // Check if this is a new user
+            let userDoc = try? await db.collection("users").document(authResult.user.uid).getDocument()
+            if userDoc == nil || !userDoc!.exists {
+                // Create new user document
+                let user = User(
+                    id: authResult.user.uid,
+                    email: authResult.user.email ?? "",
+                    displayName: authResult.user.displayName,
+                    photoURL: photoURL
+                )
+                try await db.collection("users").document(user.id).setData(user.toFirestoreData())
+            } else {
+                // Update existing user with photo URL if needed
+                if photoURL != nil {
+                    let updateData: [String: String] = ["photoURL": photoURL!]
+                    try await db.collection("users").document(authResult.user.uid).updateData(updateData)
+                }
+            }
+            
+            await fetchUserData(userId: authResult.user.uid)
+        } catch {
+            print("Google Sign-In error: \(error.localizedDescription)")
+            if let gidError = error as? GIDSignInError {
+                switch gidError.code {
+                case .hasNoAuthInKeychain:
+                    throw AuthError.noClientId
+                case .unknown:
+                    throw AuthError.unknown
+                case .keychain:
+                    throw AuthError.keychain
+                case .noSignInInProgress:
+                    throw AuthError.userNotAuthenticated
+                case .scopesMissing:
+                    throw AuthError.scopesMissing
+                case .serverAuthCodeMissing:
+                    throw AuthError.serverAuthCodeMissing
+                @unknown default:
+                    throw AuthError.unknown
+                }
+            }
+            throw error
         }
-        
-        await fetchUserData(userId: authResult.user.uid)
     }
 }
 
@@ -179,17 +219,29 @@ enum AuthError: LocalizedError {
     case noClientId
     case noRootViewController
     case userNotAuthenticated
+    case unknown
+    case keychain
+    case scopesMissing
+    case serverAuthCodeMissing
     
     var errorDescription: String? {
         switch self {
         case .adminRequired:
             return "Only admins can demote users"
         case .noClientId:
-            return "No client ID found"
+            return "Google Sign-In is not properly configured. Please check your GoogleService-Info.plist file."
         case .noRootViewController:
-            return "No root view controller found"
+            return "Unable to present Google Sign-In. Please try again."
         case .userNotAuthenticated:
-            return "User is not authenticated"
+            return "Failed to authenticate with Google"
+        case .unknown:
+            return "An unknown error occurred during Google Sign-In"
+        case .keychain:
+            return "Unable to access keychain. Please check your device settings."
+        case .scopesMissing:
+            return "Required Google Sign-In scopes are missing"
+        case .serverAuthCodeMissing:
+            return "Server authentication failed. Please try again."
         }
     }
 }
