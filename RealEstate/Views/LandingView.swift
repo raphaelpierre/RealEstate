@@ -8,41 +8,89 @@
 import SwiftUI
 
 enum PriceRange: String, CaseIterable {
-    case all = "All Prices"
-    case under500k = "Under $500k"
-    case under1m = "Under $1M"
-    case over1m = "Over $1M"
+    case all = "all_prices"
+    case under200k = "under_200k"
+    case under500k = "under_500k"
+    case over500k = "over_500k"
     
     var range: ClosedRange<Double>? {
         switch self {
         case .all: return nil
-        case .under500k: return 0...500_000
-        case .under1m: return 500_001...1_000_000
-        case .over1m: return 1_000_001...Double.infinity
+        case .under200k: return 0...200_000
+        case .under500k: return 200_001...500_000
+        case .over500k: return 500_001...Double.infinity
+        }
+    }
+    
+    var localizedString: String {
+        return self.rawValue.localized
+    }
+    
+    // Get the localized string with the correct currency symbol
+    func localizedStringWithCurrency(_ currencyManager: CurrencyManager) -> String {
+        let isEuro = currencyManager.selectedCurrency == .eur
+        let isCFA = currencyManager.selectedCurrency == .cfa
+        
+        switch self {
+        case .all:
+            return self.localizedString
+        case .under200k:
+            if isEuro {
+                return "Moins de 200k€".localized
+            } else if isCFA {
+                return "Moins de 200k CFA".localized
+            } else {
+                return "Under $200k".localized
+            }
+        case .under500k:
+            if isEuro {
+                return "200k-500k€".localized
+            } else if isCFA {
+                return "200k-500k CFA".localized
+            } else {
+                return "$200k-$500k".localized
+            }
+        case .over500k:
+            if isEuro {
+                return "Plus de 500k€".localized
+            } else if isCFA {
+                return "Plus de 500k CFA".localized
+            } else {
+                return "Over $500k".localized
+            }
         }
     }
 }
 
 enum PropertyType: String, CaseIterable {
-    case all = "All Types"
-    case house = "House"
-    case apartment = "Apartment"
-    case villa = "Villa"
-    case land = "Land"
+    case all = "all_types"
+    case house = "house"
+    case apartment = "apartment"
+    case villa = "villa"
+    case land = "land"
+    
+    var localizedString: String {
+        return self.rawValue.localized
+    }
 }
 
 enum PropertyPurpose: String, CaseIterable {
-    case all = "All Purpose"
-    case buy = "Buy"
-    case rent = "Rent"
+    case all = "all_purpose"
+    case buy = "buy"
+    case rent = "rent"
+    case seasonal = "seasonal"
+    
+    var localizedString: String {
+        return self.rawValue.localized
+    }
 }
 
 enum AreaRange: String, CaseIterable {
-    case all = "Any Size"
-    case small = "< 100m²"
-    case medium = "100-200m²"
-    case large = "200-500m²"
-    case xlarge = "> 500m²"
+    case all = "any_size"
+    case small = "small_area"
+    case medium = "medium_area"
+    case large = "large_area"
+    case xlarge = "xlarge_area"
     
     var range: ClosedRange<Double>? {
         switch self {
@@ -53,11 +101,17 @@ enum AreaRange: String, CaseIterable {
         case .xlarge: return 500...Double.infinity
         }
     }
+    
+    var localizedString: String {
+        return self.rawValue.localized
+    }
 }
 
 struct LandingView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
     @EnvironmentObject private var authManager: AuthManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
     @State private var showingLoginSheet = false
     @State private var selectedPriceRange: PriceRange = .all
     @State private var selectedPropertyType: PropertyType = .all
@@ -132,12 +186,13 @@ struct LandingView: View {
     
     private struct SearchBarView: View {
         @Binding var searchText: String
+        @EnvironmentObject private var localizationManager: LocalizationManager
         
         var body: some View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(Theme.textWhite.opacity(0.6))
-                TextField("Search properties...", text: $searchText)
+                TextField("search_properties".localized, text: $searchText)
                     .foregroundColor(Theme.textWhite)
                     .accentColor(Theme.primaryRed)
                 
@@ -153,6 +208,7 @@ struct LandingView: View {
             .padding()
             .background(Color.black.opacity(0.3))
             .cornerRadius(10)
+            .id(localizationManager.refreshToggle)
         }
     }
     
@@ -161,6 +217,9 @@ struct LandingView: View {
         @Binding var selectedPurpose: PropertyPurpose
         @Binding var selectedBedrooms: Int?
         @Binding var showingFilters: Bool
+        @EnvironmentObject private var localizationManager: LocalizationManager
+        @EnvironmentObject private var currencyManager: CurrencyManager
+        @State private var hoveredFilter: String?
         
         var body: some View {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -172,23 +231,33 @@ struct LandingView: View {
                                 selectedPropertyType = type
                             } label: {
                                 HStack {
-                                    Text(type.rawValue)
+                                    Text(type.localizedString)
                                     if selectedPropertyType == type {
                                         Image(systemName: "checkmark")
+                                            .foregroundColor(Theme.primaryRed)
                                     }
                                 }
+                                .foregroundColor(Theme.textWhite)
                             }
                         }
                     } label: {
                         HStack {
-                            Text(selectedPropertyType.rawValue)
+                            Text(selectedPropertyType.localizedString)
                             Image(systemName: "chevron.down")
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Theme.cardBackground)
-                        .cornerRadius(Theme.cornerRadius)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                .fill(selectedPropertyType != .all ? Theme.primaryRed.opacity(0.2) : Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .stroke(selectedPropertyType != .all ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                )
+                        )
+                        .foregroundColor(selectedPropertyType != .all ? Theme.primaryRed : Theme.textWhite)
                     }
+                    .id(localizationManager.refreshToggle)
                     
                     // Purpose Filter
                     Menu {
@@ -197,23 +266,33 @@ struct LandingView: View {
                                 selectedPurpose = purpose
                             } label: {
                                 HStack {
-                                    Text(purpose.rawValue)
+                                    Text(purpose.localizedString)
                                     if selectedPurpose == purpose {
                                         Image(systemName: "checkmark")
+                                            .foregroundColor(Theme.primaryRed)
                                     }
                                 }
+                                .foregroundColor(Theme.textWhite)
                             }
                         }
                     } label: {
                         HStack {
-                            Text(selectedPurpose.rawValue)
+                            Text(selectedPurpose.localizedString)
                             Image(systemName: "chevron.down")
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Theme.cardBackground)
-                        .cornerRadius(Theme.cornerRadius)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                .fill(selectedPurpose != .all ? Theme.primaryRed.opacity(0.2) : Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .stroke(selectedPurpose != .all ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                )
+                        )
+                        .foregroundColor(selectedPurpose != .all ? Theme.primaryRed : Theme.textWhite)
                     }
+                    .id(localizationManager.refreshToggle)
                     
                     // More Filters Button
                     Button {
@@ -221,13 +300,22 @@ struct LandingView: View {
                     } label: {
                         HStack {
                             Image(systemName: "slider.horizontal.3")
-                            Text("More Filters")
+                            Text("more_filters".localized)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Theme.cardBackground)
-                        .cornerRadius(Theme.cornerRadius)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                .fill(Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .stroke(Theme.primaryRed.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                        .foregroundColor(Theme.textWhite)
                     }
+                    .id(localizationManager.refreshToggle)
+                    .id(currencyManager.refreshToggle)
                 }
                 .padding(.horizontal)
             }
@@ -240,6 +328,22 @@ struct LandingView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
+                // Banner Image
+                Image("banner")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 90)
+                    .clipped()
+                    .overlay(
+                        // Light gradient overlay to enhance image appearance
+                        LinearGradient(
+                            gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .id(localizationManager.refreshToggle)
+                
                 // Fixed Hero Section with Search and Filter Bar
                 VStack(spacing: 16) {
                     SearchBarView(searchText: $searchText)
@@ -300,6 +404,7 @@ struct LandingView: View {
                 selectedPriceRange: $selectedPriceRange,
                 selectedBedrooms: $selectedBedrooms
             )
+            .environmentObject(currencyManager)
         }
         .alert(authManager.message, isPresented: $authManager.showMessage) {
             Button("OK", role: .cancel) { }
@@ -326,11 +431,12 @@ struct LandingView: View {
             Image(systemName: "house")
                 .font(.system(size: 50))
                 .foregroundColor(Theme.textWhite.opacity(0.6))
-            Text("No properties available")
+            Text("no_properties_found".localized)
                 .font(Theme.Typography.heading)
                 .foregroundColor(Theme.textWhite.opacity(0.8))
         }
         .padding(.top, 40)
+        .id(localizationManager.refreshToggle)
     }
     
     private var propertiesGrid: some View {
@@ -362,6 +468,8 @@ struct FilterView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedPriceRange: PriceRange
     @Binding var selectedBedrooms: Int?
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
     
     var body: some View {
         ZStack {
@@ -369,16 +477,56 @@ struct FilterView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: Theme.padding) {
+                // Currency Selection
+                VStack(alignment: .leading, spacing: Theme.smallPadding) {
+                    Text("select_currency".localized)
+                        .font(Theme.Typography.heading)
+                        .foregroundColor(Theme.textWhite)
+                    
+                    HStack(spacing: 12) {
+                        ForEach(Currency.allCases) { currency in
+                            Button(action: {
+                                currencyManager.changeCurrency(to: currency)
+                            }) {
+                                HStack {
+                                    Text(currency.symbol)
+                                    Text(currency.name)
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .fill(currencyManager.selectedCurrency == currency ? Theme.primaryRed : Theme.cardBackground)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                                .stroke(currencyManager.selectedCurrency == currency ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                        )
+                                )
+                                .foregroundColor(Theme.textWhite)
+                            }
+                        }
+                    }
+                    
+                    Text("currency_info".localized)
+                        .font(.system(size: 14))
+                        .foregroundColor(Theme.textWhite.opacity(0.7))
+                        .padding(.top, 4)
+                }
+                .padding()
+                .background(Theme.cardBackground)
+                .cornerRadius(Theme.cornerRadius)
+                .id(currencyManager.refreshToggle)
+                
                 // Price Range
                 VStack(alignment: .leading, spacing: Theme.smallPadding) {
-                    Text("Price Range")
+                    Text("price_range".localized)
                         .font(Theme.Typography.heading)
                         .foregroundColor(Theme.textWhite)
                     
                     ForEach(PriceRange.allCases, id: \.self) { range in
                         Button(action: { selectedPriceRange = range }) {
                             HStack {
-                                Text(range.rawValue)
+                                Text(range.localizedString)
                                     .foregroundColor(Theme.textWhite)
                                 Spacer()
                                 if selectedPriceRange == range {
@@ -388,14 +536,20 @@ struct FilterView: View {
                             }
                         }
                         .padding()
-                        .background(Theme.cardBackground)
-                        .cornerRadius(Theme.cornerRadius)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                .fill(selectedPriceRange == range ? Theme.primaryRed.opacity(0.2) : Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .stroke(selectedPriceRange == range ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                )
+                        )
                     }
                 }
                 
                 // Bedrooms
                 VStack(alignment: .leading, spacing: Theme.smallPadding) {
-                    Text("Bedrooms")
+                    Text("bedrooms".localized)
                         .font(Theme.Typography.heading)
                         .foregroundColor(Theme.textWhite)
                     
@@ -406,18 +560,30 @@ struct FilterView: View {
                                     .font(Theme.Typography.body)
                                     .foregroundColor(selectedBedrooms == number ? Theme.textWhite : Theme.textWhite.opacity(0.6))
                                     .frame(width: 44, height: 44)
-                                    .background(selectedBedrooms == number ? Theme.primaryRed : Theme.cardBackground)
-                                    .cornerRadius(Theme.cornerRadius)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                            .fill(selectedBedrooms == number ? Theme.primaryRed : Theme.cardBackground)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                                    .stroke(selectedBedrooms == number ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                            )
+                                    )
                             }
                         }
                         
                         Button(action: { selectedBedrooms = nil }) {
-                            Text("Any")
+                            Text("any".localized)
                                 .font(Theme.Typography.body)
                                 .foregroundColor(selectedBedrooms == nil ? Theme.textWhite : Theme.textWhite.opacity(0.6))
                                 .frame(width: 44, height: 44)
-                                .background(selectedBedrooms == nil ? Theme.primaryRed : Theme.cardBackground)
-                                .cornerRadius(Theme.cornerRadius)
+                                .background(
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                        .fill(selectedBedrooms == nil ? Theme.primaryRed : Theme.cardBackground)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                                                .stroke(selectedBedrooms == nil ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                        )
+                                )
                         }
                     }
                 }
@@ -426,7 +592,7 @@ struct FilterView: View {
                 
                 // Apply Button
                 Button(action: { dismiss() }) {
-                    Text("Apply Filters")
+                    Text("apply_filters".localized)
                         .font(Theme.Typography.heading)
                         .foregroundColor(Theme.textWhite)
                         .frame(maxWidth: .infinity)
@@ -434,6 +600,7 @@ struct FilterView: View {
                         .background(Theme.primaryRed)
                         .cornerRadius(Theme.cornerRadius)
                 }
+                .id(localizationManager.refreshToggle)
             }
             .padding()
         }
@@ -441,10 +608,11 @@ struct FilterView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
+                Button("done".localized) {
                     dismiss()
                 }
                 .foregroundColor(Theme.primaryRed)
+                .id(localizationManager.refreshToggle)
             }
         }
     }
@@ -453,11 +621,12 @@ struct FilterView: View {
 struct FilterButton: View {
     let icon: String
     let text: String
+    @EnvironmentObject private var localizationManager: LocalizationManager
     
     var body: some View {
         HStack {
             Image(systemName: icon)
-            Text(text)
+            Text(text.localized)
             Image(systemName: "chevron.down")
         }
         .foregroundColor(Theme.textWhite)
@@ -465,6 +634,7 @@ struct FilterButton: View {
         .padding(.vertical, 8)
         .background(Theme.cardBackground)
         .cornerRadius(Theme.cornerRadius)
+        .id(localizationManager.refreshToggle)
     }
 }
 
@@ -473,5 +643,7 @@ struct FilterButton: View {
         LandingView()
             .environmentObject(FirebaseManager.shared)
             .environmentObject(AuthManager.shared)
+            .environmentObject(LocalizationManager.shared)
+            .environmentObject(CurrencyManager.shared)
     }
 }

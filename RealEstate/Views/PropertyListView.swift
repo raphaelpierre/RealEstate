@@ -4,6 +4,8 @@ import MapKit
 
 struct PropertyListView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var selectedViewMode: ViewMode
@@ -14,42 +16,73 @@ struct PropertyListView: View {
     }
     
     var body: some View {
-        VStack {
-            // Segmented control for view mode
-            Picker("View Mode", selection: $selectedViewMode) {
-                Text("List").tag(ViewMode.list)
-                Text("Map").tag(ViewMode.map)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
+        ZStack {
+            Theme.backgroundBlack
+                .ignoresSafeArea()
             
-            // Conditional view based on selected mode
-            if selectedViewMode == .list {
-                // List view without filters
-                Group {
-                    if firebaseManager.properties.isEmpty {
-                        ContentUnavailableView(
-                            "No Properties Found",
-                            systemImage: "house",
-                            description: Text("Check back later for new listings")
-                        )
-                    } else {
-                        ScrollView {
-                            LazyVStack(spacing: Theme.padding) {
-                                ForEach(firebaseManager.properties) { property in
-                                    NavigationLink(destination: PropertyDetailView(property: property)) {
-                                        PropertyCard(property: property)
-                                            .contentShape(Rectangle())
+            VStack(spacing: 24) {
+                // Header
+                Text("properties".localized)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(Theme.textWhite)
+                    .padding(.top)
+                
+                // Segmented control for view mode
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: selectedViewMode == .list ? "list.bullet" : "map")
+                            .font(.system(size: 24))
+                            .foregroundColor(Theme.primaryRed)
+                        
+                        Text("display_mode".localized)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(Theme.textWhite)
+                    }
+                    
+                    Picker("View Mode", selection: $selectedViewMode) {
+                        Text("list".localized).tag(ViewMode.list)
+                        Text("map".localized).tag(ViewMode.map)
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                }
+                .padding()
+                .background(Theme.cardBackground)
+                .cornerRadius(12)
+                .padding(.horizontal)
+                .id(localizationManager.refreshToggle)
+                
+                // Conditional view based on selected mode
+                if selectedViewMode == .list {
+                    // List view without filters
+                    Group {
+                        if firebaseManager.properties.isEmpty {
+                            ContentUnavailableView(
+                                "no_properties_found".localized,
+                                systemImage: "house",
+                                description: Text("Check back later for new listings")
+                            )
+                            .foregroundColor(Theme.textWhite)
+                        } else {
+                            ScrollView {
+                                LazyVStack(spacing: 16) {
+                                    ForEach(firebaseManager.properties) { property in
+                                        NavigationLink(destination: PropertyDetailView(property: property)
+                                            .environmentObject(localizationManager)) {
+                                            PropertyCard(property: property)
+                                                .contentShape(Rectangle())
+                                        }
                                     }
                                 }
+                                .padding()
                             }
-                            .padding()
                         }
                     }
+                } else {
+                    // Map view
+                    PropertyMapView(properties: firebaseManager.properties)
+                        .environmentObject(localizationManager)
+                        .environmentObject(currencyManager)
                 }
-            } else {
-                // Map view
-                PropertyMapView(properties: firebaseManager.properties)
             }
         }
         .onAppear {
@@ -79,13 +112,9 @@ struct PropertyListView: View {
 
 struct PropertyCard: View {
     let property: Property
-    
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: "en_US")
-        return formatter
-    }()
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
+    @State private var imageLoadError: String?
     
     private var propertyImage: some View {
         Group {
@@ -100,8 +129,11 @@ struct PropertyCard: View {
                             .scaledToFill()
                             .frame(height: 200)
                             .clipped()
-                    case .failure:
+                    case .failure(let error):
                         placeholderImage
+                            .onAppear {
+                                imageLoadError = "Failed to load image: \(error.localizedDescription)"
+                            }
                     @unknown default:
                         EmptyView()
                     }
@@ -110,97 +142,89 @@ struct PropertyCard: View {
                 placeholderImage
             }
         }
+        .alert("Image Loading Error", isPresented: .constant(imageLoadError != nil)) {
+            Button("OK") {
+                imageLoadError = nil
+            }
+        } message: {
+            if let error = imageLoadError {
+                Text(error)
+            }
+        }
     }
     
     private var placeholderImage: some View {
-        Rectangle()
-            .foregroundColor(Theme.cardBackground)
-            .overlay(
-                Image(systemName: "photo")
-                    .foregroundColor(Theme.textWhite.opacity(0.6))
-            )
+        Image(systemName: "house")
+            .font(.system(size: 40))
+            .foregroundColor(Theme.primaryRed)
+            .frame(maxWidth: .infinity)
             .frame(height: 200)
+            .background(Theme.cardBackground)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Property Image
             propertyImage
+                .frame(height: 200)
+                .clipped()
             
-            VStack(alignment: .leading, spacing: Theme.padding) {
+            // Property Details
+            VStack(alignment: .leading, spacing: 8) {
                 // Title and Price
-                VStack(alignment: .leading, spacing: 8) {
+                HStack {
                     Text(property.title)
-                        .font(Theme.Typography.heading)
+                        .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(Theme.textWhite)
-                        .lineLimit(2)
                     
-                    Text(currencyFormatter.string(from: NSNumber(value: property.price)) ?? "$0")
-                        .font(Theme.Typography.title)
+                    Spacer()
+                    
+                    Text(currencyManager.formatPrice(currencyManager.convert(property.price)))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Theme.primaryRed)
                 }
                 
-                // Key Details
-                HStack(spacing: Theme.padding) {
-                    Label {
-                        Text("\(property.bedrooms) Beds")
-                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                    } icon: {
-                        Image(systemName: "bed.double.fill")
-                            .foregroundColor(Theme.primaryRed)
-                    }
-                    
-                    Label {
-                        Text("\(property.bathrooms) Baths")
-                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                    } icon: {
-                        Image(systemName: "shower.fill")
-                            .foregroundColor(Theme.primaryRed)
-                    }
-                    
-                    Label {
-                        Text("\(Int(property.area))m²")
-                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                    } icon: {
-                        Image(systemName: "square.fill")
-                            .foregroundColor(Theme.primaryRed)
-                    }
-                }
-                .font(Theme.Typography.caption)
-                
                 // Location
-                if !property.address.isEmpty || !property.city.isEmpty {
-                    Label {
-                        Text("\(property.address), \(property.city)")
-                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                            .lineLimit(1)
-                    } icon: {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundColor(Theme.primaryRed)
-                    }
-                    .font(Theme.Typography.caption)
+                HStack {
+                    Image(systemName: "location")
+                        .foregroundColor(Theme.primaryRed)
+                    Text("\(property.city), \(property.country)")
+                        .font(.system(size: 14))
+                        .foregroundColor(Theme.textWhite.opacity(0.7))
+                }
+                
+                // Property Features
+                HStack(spacing: 16) {
+                    PropertyFeature(icon: "bed.double", value: "\(property.bedrooms)")
+                    PropertyFeature(icon: "shower", value: "\(property.bathrooms)")
+                    PropertyFeature(icon: "ruler", value: "\(Int(property.area))m²")
                 }
             }
             .padding()
         }
         .background(Theme.cardBackground)
-        .cornerRadius(Theme.cornerRadius)
+        .cornerRadius(12)
     }
 }
-
-// MARK: - Supporting Views
 
 struct PropertyFeature: View {
     let icon: String
     let value: String
     
     var body: some View {
-        Label {
-            Text(value)
-                .foregroundColor(Theme.textWhite.opacity(0.7))
-        } icon: {
+        HStack(spacing: 4) {
             Image(systemName: icon)
                 .foregroundColor(Theme.primaryRed)
+            Text(value)
+                .font(.system(size: 14))
+                .foregroundColor(Theme.textWhite.opacity(0.7))
         }
-        .font(Theme.Typography.caption)
     }
+}
+
+#Preview {
+    PropertyListView()
+        .environmentObject(FirebaseManager.shared)
+        .environmentObject(LocalizationManager.shared)
+        .environmentObject(CurrencyManager.shared)
 }

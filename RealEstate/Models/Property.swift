@@ -23,8 +23,9 @@ struct ContactInfo: Codable, Equatable {
     }
 }
 
-struct Property: Identifiable, Codable, Equatable {
+struct Property: Identifiable, Codable, Equatable, Hashable {
     var id: String
+    var userId: String
     var title: String
     var price: Double
     var description: String
@@ -46,6 +47,7 @@ struct Property: Identifiable, Codable, Equatable {
     var longitude: Double = 0.0
     
     init(id: String = UUID().uuidString,
+         userId: String = "",
          title: String,
          price: Double,
          description: String,
@@ -66,6 +68,7 @@ struct Property: Identifiable, Codable, Equatable {
          latitude: Double = 0.0,
          longitude: Double = 0.0) {
         self.id = id
+        self.userId = userId
         self.title = title
         self.price = price
         self.description = description
@@ -90,6 +93,7 @@ struct Property: Identifiable, Codable, Equatable {
     // Implement Equatable
     static func == (lhs: Property, rhs: Property) -> Bool {
         return lhs.id == rhs.id &&
+               lhs.userId == rhs.userId &&
                lhs.title == rhs.title &&
                lhs.price == rhs.price &&
                lhs.description == rhs.description &&
@@ -111,11 +115,17 @@ struct Property: Identifiable, Codable, Equatable {
                lhs.longitude == rhs.longitude
     }
     
+    // Implement Hashable
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
     static func fromFirestore(_ document: DocumentSnapshot) -> Property? {
         guard let data = document.data() else { return nil }
         
         return Property(
             id: document.documentID,
+            userId: data["userId"] as? String ?? "",
             title: data["title"] as? String ?? "",
             price: data["price"] as? Double ?? 0.0,
             description: data["description"] as? String ?? "",
@@ -139,6 +149,7 @@ struct Property: Identifiable, Codable, Equatable {
     
     func toFirestoreData() -> [String: Any] {
         return [
+            "userId": userId,
             "title": title,
             "price": price,
             "description": description,
@@ -164,6 +175,7 @@ struct Property: Identifiable, Codable, Equatable {
 // MARK: - Preview Helper
 extension Property {
     static let example = Property(
+        userId: "example_user_id",
         title: "Luxury Villa with Ocean View",
         price: 1250000,
         description: "Beautiful luxury villa with panoramic ocean views, featuring modern amenities and elegant design.",

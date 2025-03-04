@@ -35,16 +35,13 @@ struct LoginView: View {
             
             ScrollView {
                 VStack(spacing: Theme.padding * 2) {
-                    // Logo or App Name
-                    VStack(spacing: Theme.smallPadding) {
-                        Text("Real Estate")
-                            .font(Theme.Typography.titleLarge)
-                            .foregroundColor(Theme.textWhite)
-                        Text(isRegistering ? "Create your account" : "Find your dream home")
-                            .font(Theme.Typography.body)
-                            .foregroundColor(Theme.textWhite.opacity(0.8))
-                    }
-                    .padding(.top, 60)
+                    // Banner Image
+                    Image("banner")
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(Theme.cornerRadius)
+                        .padding(.horizontal, Theme.padding)
+                        .padding(.top, 60)
                     
                     // Login/Register Form
                     VStack(spacing: Theme.padding) {
@@ -58,7 +55,7 @@ struct LoginView: View {
                         // Password Field
                         TextFormField(
                             label: "Password",
-                            placeholder: "Password",
+                            placeholder: "Enter your password".localized,
                             text: $password,
                             isSecure: true
                         )

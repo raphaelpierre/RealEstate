@@ -1,0 +1,135 @@
+// General
+"app_name" = "Immobilier";
+"loading" = "Chargement...";
+"error" = "Erreur";
+"retry" = "Réessayer";
+"cancel" = "Annuler";
+"save" = "Enregistrer";
+"delete" = "Supprimer";
+"edit" = "Modifier";
+"done" = "Terminé";
+
+// Authentication
+"login" = "Connexion";
+"signup" = "Inscription";
+"email" = "Email";
+"password" = "Mot de passe";
+"forgot_password" = "Mot de passe oublié ?";
+"logout" = "Déconnexion";
+"profile" = "Profil";
+"sign_out" = "Déconnexion";
+"sign_out_description" = "Se déconnecter de votre compte";
+
+// Property Listings
+"properties" = "Propriétés";
+"property_details" = "Détails du bien";
+"price" = "Prix";
+"bedrooms" = "Chambres";
+"bathrooms" = "Salles de bain";
+"area" = "Superficie";
+"address" = "Adresse";
+"description" = "Description";
+"contact" = "Contact";
+"favorites" = "Favoris";
+"no_favorites" = "Vous n'avez pas encore de favoris";
+"add_to_favorites" = "Ajouter aux favoris";
+"remove_from_favorites" = "Retirer des favoris";
+"view_favorites_description" = "Voir vos propriétés favorites";
+
+// Filters
+"filters" = "Filtres";
+"min_price" = "Prix minimum";
+"max_price" = "Prix maximum";
+"property_type" = "Type de propriété";
+"sort_by" = "Trier par";
+"apply_filters" = "Appliquer les filtres";
+"reset_filters" = "Réinitialiser les filtres";
+
+// Property Types
+"house" = "Maison";
+"apartment" = "Appartement";
+"condo" = "Copropriété";
+"villa" = "Villa";
+"land" = "Terrain";
+
+// Admin
+"admin" = "Admin";
+"admin_tools" = "Outils d'administration";
+"add_property" = "Ajouter une propriété";
+"edit_property" = "Modifier la propriété";
+"delete_property" = "Supprimer la propriété";
+"property_title" = "Titre de la propriété";
+"upload_images" = "Télécharger des images";
+"select_location" = "Sélectionner l'emplacement";
+"update_property_locations" = "Mettre à jour les emplacements";
+"update_property_locations_message" = "Cela tentera d'ajouter des coordonnées géographiques à toutes les propriétés sans données de localisation. Cela peut prendre quelques minutes.";
+"property_management" = "Gestion des propriétés";
+"admin_property_description" = "Ajouter, modifier ou supprimer des propriétés";
+
+// Map
+"map" = "Carte";
+"list" = "Liste";
+"view_on_map" = "Voir sur la carte";
+
+// Errors
+"login_error" = "Échec de connexion. Veuillez vérifier vos identifiants.";
+"signup_error" = "Échec de création de compte. Veuillez réessayer.";
+"load_properties_error" = "Échec de chargement des propriétés. Veuillez réessayer.";
+"save_property_error" = "Échec d'enregistrement de la propriété. Veuillez réessayer.";
+"network_error" = "Erreur réseau. Veuillez vérifier votre connexion.";
+
+// Additional Terms
+"square_meters" = "mètres carrés";
+"square_feet" = "pieds carrés";
+"for_sale" = "À vendre";
+"for_rent" = "À louer";
+"monthly" = "par mois";
+"yearly" = "par an";
+"furnished" = "Meublé";
+"unfurnished" = "Non meublé";
+"new_construction" = "Construction neuve";
+"year_built" = "Année de construction";
+"garage" = "Garage";
+"parking" = "Stationnement";
+"balcony" = "Balcon";
+"garden" = "Jardin";
+"pool" = "Piscine";
+"elevator" = "Ascenseur";
+"air_conditioning" = "Climatisation";
+"heating" = "Chauffage";
+"security_system" = "Système de sécurité";
+
+// Success Messages
+"property_added_success" = "Propriété ajoutée avec succès";
+"property_updated_success" = "Propriété mise à jour avec succès";
+"property_deleted_success" = "Propriété supprimée avec succès";
+"account_created_success" = "Compte créé avec succès";
+"password_reset_email_sent" = "Email de réinitialisation du mot de passe envoyé";
+"location_permission_needed" = "L'autorisation de localisation est nécessaire pour afficher les propriétés à proximité";
+"no_properties_found" = "Aucune propriété trouvée";
+"filter_no_results" = "Aucun résultat pour ces filtres";
+
+/* Property Detail View */
+"features" = "Caractéristiques";
+"schedule_viewing" = "Planifier une visite";
+"contact_agent" = "Contacter l'agent";
+"save_property" = "Sauvegarder";
+
+/* Language Selection */
+"select_language" = "Choisir la langue";
+"change_language_description" = "Changer la langue de l'application";
+
+/* Profile View */
+"menu" = "Menu";
+"my_account" = "Mon Compte";
+"session" = "Session";
+
+/* Demo App */
+"localization_demo" = "Démo de Localisation";
+"examples" = "Exemples";
+"view_property_details" = "Voir les Détails du Bien";
+"language" = "Langue";
+
+/* ContentView */
+"home" = "Accueil";
+"update" = "Mettre à jour"; 

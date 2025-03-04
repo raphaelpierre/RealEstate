@@ -54,5 +54,14 @@
     <string>We use your location to help you find nearby properties and provide location-based services.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We use your location to help you find nearby properties and provide location-based services.</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.516865549374-bftjemcatb4uvppppq06koloipfk2i1j</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

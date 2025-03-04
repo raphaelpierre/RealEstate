@@ -9,6 +9,8 @@ import SwiftUI
 
 struct AdminView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var authManager: AuthManager
     @State private var showingAddProperty = false
     @State private var propertyToEdit: Property?
     @State private var showingDeleteAlert = false
@@ -86,12 +88,16 @@ struct AdminView: View {
             NavigationView {
                 AdminPropertyFormView(property: nil)
                     .environmentObject(firebaseManager)
+                    .environmentObject(localizationManager)
+                    .environmentObject(authManager)
             }
         }
         .sheet(item: $propertyToEdit) { property in
             NavigationView {
                 AdminPropertyFormView(property: property)
                     .environmentObject(firebaseManager)
+                    .environmentObject(localizationManager)
+                    .environmentObject(authManager)
             }
         }
         .alert("Delete Property", isPresented: $showingDeleteAlert) {

@@ -14,17 +14,20 @@ struct User: Codable, Identifiable {
     var displayName: String?
     var isAdmin: Bool
     var createdAt: Date
+    var photoURL: String?
     
     init(id: String = UUID().uuidString,
          email: String,
          displayName: String? = nil,
          isAdmin: Bool = false,
-         createdAt: Date = Date()) {
+         createdAt: Date = Date(),
+         photoURL: String? = nil) {
         self.id = id
         self.email = email
         self.displayName = displayName
         self.isAdmin = isAdmin
         self.createdAt = createdAt
+        self.photoURL = photoURL
     }
     
     static func fromFirestore(_ document: DocumentSnapshot) -> User? {
@@ -35,7 +38,8 @@ struct User: Codable, Identifiable {
             email: data["email"] as? String ?? "",
             displayName: data["displayName"] as? String,
             isAdmin: data["isAdmin"] as? Bool ?? false,
-            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
+            photoURL: data["photoURL"] as? String
         )
     }
     
@@ -48,6 +52,10 @@ struct User: Codable, Identifiable {
         
         if let displayName = displayName {
             data["displayName"] = displayName
+        }
+        
+        if let photoURL = photoURL {
+            data["photoURL"] = photoURL
         }
         
         return data

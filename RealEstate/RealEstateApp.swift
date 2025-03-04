@@ -14,10 +14,14 @@ struct SplashScreenView: View {
     
     @EnvironmentObject private var authManager: AuthManager
     @EnvironmentObject private var firebaseManager: FirebaseManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @StateObject private var currencyManager = CurrencyManager.shared
            
     var body: some View {
         if isActive {
             ContentView()
+                .environmentObject(localizationManager)
+                .environmentObject(currencyManager)
         } else {
             ZStack {
                 Theme.backgroundBlack
@@ -57,16 +61,22 @@ struct SplashScreenView: View {
 struct RealEstateApp: App {
     @StateObject private var authManager = AuthManager.shared
     @StateObject private var firebaseManager = FirebaseManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
+    @StateObject private var currencyManager = CurrencyManager.shared
     
     init() {
         FirebaseApp.configure()
+        // Initialize localization
+        LocalizationSetup.initialize()
     }
     
     var body: some Scene {
         WindowGroup {
-            SplashScreenView()
+            VideoSplashView()
                 .environmentObject(authManager)
                 .environmentObject(firebaseManager)
+                .environmentObject(localizationManager)
+                .environmentObject(currencyManager)
         }
     }
 }
@@ -76,5 +86,7 @@ struct SplashScreenView_Previews: PreviewProvider {
         SplashScreenView()
             .environmentObject(AuthManager.shared)
             .environmentObject(FirebaseManager.shared)
+            .environmentObject(LocalizationManager.shared)
+            .environmentObject(CurrencyManager.shared)
     }
 }

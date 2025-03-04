@@ -414,25 +414,91 @@ class FirebaseManager: ObservableObject {
     
     // Update method to use geocoding before saving a property
     func saveProperty(_ property: Property) async throws -> Property {
+        var propertyToSave = property
+        
+        // Generate a new ID if the property is new (empty ID)
+        if propertyToSave.id.isEmpty {
+            propertyToSave.id = UUID().uuidString
+        }
+        
         do {
             // Attempt to geocode the address
-            let geocodedProperty = try await geocodeAddress(for: property)
+            let geocodedProperty = try await geocodeAddress(for: propertyToSave)
             
-            // If geocoding is successful, save the property with coordinates
-            if property.id.isEmpty {
-                return try await addProperty(geocodedProperty)
+            // Check if the property already exists in Firestore
+            let docRef = db.collection("properties").document(geocodedProperty.id)
+            let docSnapshot = try await docRef.getDocument()
+            
+            let savedProperty: Property
+            if docSnapshot.exists {
+                // If the document exists, update it
+                savedProperty = try await updateProperty(geocodedProperty)
             } else {
-                return try await updateProperty(geocodedProperty)
+                // If the document doesn't exist, add it as a new document
+                savedProperty = try await addProperty(geocodedProperty)
             }
+            
+            // Update local properties array
+            if let index = properties.firstIndex(where: { $0.id == savedProperty.id }) {
+                properties[index] = savedProperty
+            } else {
+                properties.append(savedProperty)
+            }
+            
+            return savedProperty
+            
         } catch {
             // If geocoding fails, save the property without coordinates
             print("⚠️ Geocoding failed: \(error.localizedDescription). Saving property without coordinates.")
             
-            if property.id.isEmpty {
-                return try await addProperty(property)
+            // Check if the property already exists in Firestore
+            let docRef = db.collection("properties").document(propertyToSave.id)
+            let docSnapshot = try await docRef.getDocument()
+            
+            let savedProperty: Property
+            if docSnapshot.exists {
+                // If the document exists, update it
+                savedProperty = try await updateProperty(propertyToSave)
             } else {
-                return try await updateProperty(property)
+                // If the document doesn't exist, add it as a new document
+                savedProperty = try await addProperty(propertyToSave)
             }
+            
+            // Update local properties array
+            if let index = properties.firstIndex(where: { $0.id == savedProperty.id }) {
+                properties[index] = savedProperty
+            } else {
+                properties.append(savedProperty)
+            }
+            
+            return savedProperty
+        }
+    }
+    
+    // MARK: - User Management
+    
+    @MainActor
+    func fetchAllUsers() async throws -> [User] {
+        let snapshot = try await db.collection("users").getDocuments()
+        return snapshot.documents.compactMap { User.fromFirestore($0) }
+    }
+    
+    @MainActor
+    func updateUser(_ user: User) async throws {
+        let docRef = db.collection("users").document(user.id)
+        try await docRef.updateData(user.toFirestoreData())
+    }
+    
+    @MainActor
+    func deleteUser(_ userId: String) async throws {
+        // Delete user document from Firestore
+        try await db.collection("users").document(userId).delete()
+        
+        // Delete user's favorites
+        let favoritesRef = db.collection("users").document(userId).collection("favorites")
+        let snapshot = try await favoritesRef.getDocuments()
+        for document in snapshot.documents {
+            try await document.reference.delete()
         }
     }
 }

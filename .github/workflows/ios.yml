@@ -92,25 +92,26 @@ jobs:
           # Clean build folder first
           xcodebuild clean -scheme "$scheme" -"$filetype_parameter" "$file_to_build" || true
           
-          # Build with specific settings
-          xcodebuild build-for-testing \
+          # Build with minimal settings
+          xcodebuild build \
             -scheme "$scheme" \
             -"$filetype_parameter" "$file_to_build" \
             -destination "$destination" \
             -configuration Debug \
-            -enableCodeCoverage YES \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -verbose \
             IPHONEOS_DEPLOYMENT_TARGET=16.4 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            GCC_OPTIMIZATION_LEVEL=0 \
-            SWIFT_OPTIMIZATION_LEVEL="-Onone" \
             ENABLE_BITCODE=NO \
             ONLY_ACTIVE_ARCH=YES \
             VALIDATE_WORKSPACE=NO \
-            BUILD_LIBRARY_FOR_DISTRIBUTION=NO || {
+            BUILD_LIBRARY_FOR_DISTRIBUTION=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            MTL_ENABLE_DEBUG_INFO=INCLUDE_SOURCE \
+            MTL_FAST_MATH=YES || {
               echo "Build failed with exit code $?"
               exit 1
             }
@@ -141,25 +142,26 @@ jobs:
           
           echo "Testing with $filetype_parameter: $file_to_build"
           
-          # Test with specific settings
-          xcodebuild test-without-building \
+          # Test with minimal settings
+          xcodebuild test \
             -scheme "$scheme" \
             -"$filetype_parameter" "$file_to_build" \
             -destination "$destination" \
             -configuration Debug \
-            -enableCodeCoverage YES \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -verbose \
             IPHONEOS_DEPLOYMENT_TARGET=16.4 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            GCC_OPTIMIZATION_LEVEL=0 \
-            SWIFT_OPTIMIZATION_LEVEL="-Onone" \
             ENABLE_BITCODE=NO \
             ONLY_ACTIVE_ARCH=YES \
             VALIDATE_WORKSPACE=NO \
-            BUILD_LIBRARY_FOR_DISTRIBUTION=NO || {
+            BUILD_LIBRARY_FOR_DISTRIBUTION=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            MTL_ENABLE_DEBUG_INFO=INCLUDE_SOURCE \
+            MTL_FAST_MATH=YES || {
               echo "Test failed with exit code $?"
               exit 1
             }

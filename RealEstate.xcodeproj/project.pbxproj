@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -27,7 +27,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		18C924362D381E08001767C5 /* Exceptions for "RealEstate" folder in "RealEstate" target */ = {
+		18C924362D381E08001767C5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -37,14 +37,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		18B3D7C72D37FAA70030C3E9 /* RealEstate */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				18C924362D381E08001767C5 /* Exceptions for "RealEstate" folder in "RealEstate" target */,
-			);
-			path = RealEstate;
-			sourceTree = "<group>";
-		};
+		18B3D7C72D37FAA70030C3E9 /* RealEstate */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (18C924362D381E08001767C5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = RealEstate; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +134,7 @@
 				};
 			};
 			buildConfigurationList = 18B3D7C02D37FAA70030C3E9 /* Build configuration list for PBXProject "RealEstate" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -154,7 +148,6 @@
 				18B3D7D62D37FB610030C3E9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				18B3D81C2D380BCC0030C3E9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
-			preferredProjectObjectVersion = 56;
 			productRefGroup = 18B3D7C62D37FAA70030C3E9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";

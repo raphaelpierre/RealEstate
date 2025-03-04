@@ -11,7 +11,11 @@ import CoreLocation
 
 struct AdminPropertyFormView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
+    @EnvironmentObject private var authManager: AuthManager
     @Environment(\.dismiss) private var dismiss
+    @State private var navigateToProperty: Property?
     
     let property: Property?
     
@@ -22,7 +26,10 @@ struct AdminPropertyFormView: View {
     @State private var isProcessingImages = false
     @State private var currentStep = 0
     @State private var showImagePicker = false
+    @State private var showSuccessMessage = false
+    @State private var successMessage = ""
     @State private var price: Double
+    @State private var priceCurrency: Currency = .usd
     @State private var bedrooms: Int
     @State private var bathrooms: Int
     @State private var area: Double
@@ -40,7 +47,9 @@ struct AdminPropertyFormView: View {
     @State private var contactWhatsapp: String = ""
     
     private let maxImages = 10
-    private let steps = ["Basic Info", "Location", "Details", "Photos", "Contact"]
+    private var steps: [String] {
+        ["basic_info".localized, "location".localized, "details".localized, "photos".localized, "contact".localized]
+    }
     
     private var isFormValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -61,6 +70,7 @@ struct AdminPropertyFormView: View {
         _title = State(initialValue: property?.title ?? "")
         _description = State(initialValue: property?.description ?? "")
         _price = State(initialValue: property?.price ?? 0.0)
+        _priceCurrency = State(initialValue: .usd) // Default to USD
         _bedrooms = State(initialValue: property?.bedrooms ?? 0)
         _bathrooms = State(initialValue: property?.bathrooms ?? 0)
         _area = State(initialValue: property?.area ?? 0.0)
@@ -88,319 +98,57 @@ struct AdminPropertyFormView: View {
                     .scaleEffect(1.5)
             } else {
                 VStack(spacing: 0) {
-                    // Progress Steps
-                    HStack(spacing: 0) {
-                        ForEach(0..<steps.count, id: \.self) { index in
-                            VStack(spacing: 4) {
-                                Circle()
-                                    .fill(currentStep >= index ? Theme.primaryRed : Theme.cardBackground)
-                                    .frame(width: 32, height: 32)
-                                    .overlay(
-                                        Text("\(index + 1)")
-                                            .foregroundColor(currentStep >= index ? .white : Theme.textWhite.opacity(0.5))
-                                    )
-                                
-                                Text(steps[index])
-                                    .font(Theme.Typography.caption)
-                                    .foregroundColor(currentStep >= index ? Theme.textWhite : Theme.textWhite.opacity(0.5))
-                            }
-                            
-                            if index < steps.count - 1 {
-                                Rectangle()
-                                    .fill(currentStep > index ? Theme.primaryRed : Theme.cardBackground)
-                                    .frame(height: 2)
-                                    .padding(.horizontal, 8)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
+                    ProgressStepsView(steps: steps, currentStep: currentStep)
                     
-                    // Form Content
-                    TabView(selection: $currentStep) {
-                        // Basic Info
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                TextFormField(
-                                    label: "Title",
-                                    placeholder: "Enter property title",
-                                    text: $title,
-                                    icon: "house.fill"
-                                )
-                                
-                                // Property Type Picker
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "building.fill")
-                                            .foregroundColor(Theme.textWhite)
-                                        Text("Property Type")
-                                            .foregroundColor(Theme.textWhite)
-                                    }
-                                    
-                                    Picker("Property Type", selection: $selectedType) {
-                                        ForEach(PropertyType.allCases.filter { $0 != .all }, id: \.self) { type in
-                                            Text(type.rawValue)
-                                                .tag(type)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                }
-                                
-                                // Property Purpose Picker
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "tag.fill")
-                                            .foregroundColor(Theme.textWhite)
-                                        Text("Purpose")
-                                            .foregroundColor(Theme.textWhite)
-                                    }
-                                    
-                                    Picker("Purpose", selection: $selectedPurpose) {
-                                        ForEach(PropertyPurpose.allCases.filter { $0 != .all }, id: \.self) { purpose in
-                                            Text(purpose.rawValue)
-                                                .tag(purpose)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                }
-                                
-                                TextFormField(
-                                    label: "Description",
-                                    placeholder: "Enter property description",
-                                    text: $description,
-                                    icon: "doc.text.fill"
-                                )
-                                
-                                NumericFormField(
-                                    "Price",
-                                    value: $price,
-                                    icon: "dollarsign.circle.fill",
-                                    isCurrency: true
-                                )
-                            }
-                            .padding()
-                        }
-                        .tag(0)
-                        
-                        // Location
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                TextFormField(
-                                    label: "Address",
-                                    placeholder: "Enter address",
-                                    text: $address,
-                                    icon: "mappin.circle.fill"
-                                )
-                                
-                                TextFormField(
-                                    label: "City",
-                                    placeholder: "Enter city",
-                                    text: $city,
-                                    icon: "building.2.fill"
-                                )
-                                
-                                TextFormField(
-                                    label: "ZIP Code",
-                                    placeholder: "Enter ZIP code",
-                                    text: $zipCode,
-                                    icon: "number.circle.fill"
-                                )
-                                
-                                TextFormField(
-                                    label: "Country",
-                                    placeholder: "Enter country",
-                                    text: $country,
-                                    icon: "globe.europe.africa.fill"
-                                )
-                            }
-                            .padding()
-                        }
-                        .tag(1)
-                        
-                        // Details
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                NumericFormField(
-                                    "Bedrooms",
-                                    value: $bedrooms,
-                                    icon: "bed.double.fill"
-                                )
-                                
-                                NumericFormField(
-                                    "Bathrooms",
-                                    value: $bathrooms,
-                                    icon: "shower.fill"
-                                )
-                                
-                                NumericFormField(
-                                    "Area (sq ft)",
-                                    value: $area,
-                                    icon: "square.fill"
-                                )
-                            }
-                            .padding()
-                        }
-                        .tag(2)
-                        
-                        // Photos
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                // Image Counter
-                                HStack {
-                                    Image(systemName: "photo.stack.fill")
-                                        .foregroundColor(Theme.textWhite)
-                                    Text("\(imageURLs.count + newImageData.count)/\(maxImages) photos")
-                                        .foregroundColor(Theme.textWhite)
-                                    Spacer()
-                                    if imageURLs.count + newImageData.count < maxImages {
-                                        PhotosPicker(
-                                            selection: $selectedImages,
-                                            maxSelectionCount: maxImages - (imageURLs.count + newImageData.count),
-                                            matching: .images
-                                        ) {
-                                            Label("Add Photos", systemImage: "plus.circle.fill")
-                                                .foregroundColor(Theme.primaryRed)
-                                        }
-                                    }
-                                }
-                                
-                                if isProcessingImages {
-                                    ProgressView("Processing images...")
-                                        .tint(Theme.primaryRed)
-                                }
-                                
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible())
-                                ], spacing: 12) {
-                                    // Show existing images
-                                    ForEach(imageURLs, id: \.self) { imageURL in
-                                        ZStack(alignment: .topTrailing) {
-                                            AsyncImage(url: URL(string: imageURL)) { phase in
-                                                switch phase {
-                                                case .empty:
-                                                    ProgressView()
-                                                        .tint(Theme.primaryRed)
-                                                case .success(let image):
-                                                    image
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fill)
-                                                case .failure:
-                                                    Image(systemName: "photo.fill")
-                                                        .foregroundColor(Theme.textWhite)
-                                                @unknown default:
-                                                    EmptyView()
-                                                }
-                                            }
-                                            .frame(height: 120)
-                                            .frame(maxWidth: .infinity)
-                                            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                                            
-                                            Button {
-                                                imageURLs.removeAll { $0 == imageURL }
-                                            } label: {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .foregroundColor(.red)
-                                                    .background(Circle().fill(Color.white))
-                                            }
-                                            .padding(4)
-                                        }
-                                    }
-                                    
-                                    // Show new images
-                                    ForEach(newImageData.indices, id: \.self) { index in
-                                        if let uiImage = UIImage(data: newImageData[index]) {
-                                            ZStack(alignment: .topTrailing) {
-                                                Image(uiImage: uiImage)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(height: 120)
-                                                    .frame(maxWidth: .infinity)
-                                                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                                                
-                                                Button {
-                                                    newImageData.remove(at: index)
-                                                } label: {
-                                                    Image(systemName: "xmark.circle.fill")
-                                                        .foregroundColor(.red)
-                                                        .background(Circle().fill(Color.white))
-                                                }
-                                                .padding(4)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            .padding()
-                        }
-                        .tag(3)
-                        
-                        // Contact
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                whatsAppContactField()
-                            }
-                            .padding()
-                        }
-                        .tag(4)
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    MainContentView(
+                        currentStep: $currentStep,
+                        title: $title,
+                        description: $description,
+                        selectedType: $selectedType,
+                        selectedPurpose: $selectedPurpose,
+                        price: $price,
+                        priceCurrency: $priceCurrency,
+                        address: $address,
+                        city: $city,
+                        zipCode: $zipCode,
+                        country: $country,
+                        bedrooms: $bedrooms,
+                        bathrooms: $bathrooms,
+                        area: $area,
+                        imageURLs: $imageURLs,
+                        newImageData: $newImageData,
+                        selectedImages: $selectedImages,
+                        isProcessingImages: $isProcessingImages,
+                        contactWhatsapp: $contactWhatsapp,
+                        maxImages: maxImages
+                    )
                     
-                    // Navigation Buttons
-                    HStack(spacing: 16) {
-                        if currentStep > 0 {
-                            Button {
+                    NavigationButtonsView(
+                        currentStep: currentStep,
+                        totalSteps: steps.count,
+                        onPrevious: {
                                 withAnimation {
                                     currentStep -= 1
-                                }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "chevron.left")
-                                    Text("Previous")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
                             }
-                            .secondaryButton()
-                        }
-                        
-                        if currentStep < steps.count - 1 {
-                            Button {
+                        },
+                        onNext: {
                                 withAnimation {
                                     currentStep += 1
-                                }
-                            } label: {
-                                HStack {
-                                    Text("Next")
-                                    Image(systemName: "chevron.right")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
                             }
-                            .primaryButton()
-                        } else {
-                            Button {
+                        },
+                        onSave: {
                                 Task {
                                     await savePropertyToFirebase()
-                                }
-                            } label: {
-                                Text("Save Property")
-                                    .foregroundColor(Theme.textWhite)
                             }
-                            .primaryButton()
-                            .disabled(false)
                         }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
+                    )
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(property == nil ? "Add Property" : "Edit Property")
+                Text(property == nil ? "add_property".localized : "edit_property".localized)
                     .font(Theme.Typography.heading)
                     .foregroundColor(Theme.textWhite)
             }
@@ -409,9 +157,33 @@ struct AdminPropertyFormView: View {
                 NavigationLink {
                     ProfileView()
                 } label: {
+                    if let user = authManager.currentUser, let photoURLString = user.photoURL, let photoURL = URL(string: photoURLString) {
+                        AsyncImage(url: photoURL) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .frame(width: 24, height: 24)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 24, height: 24)
+                                    .clipShape(Circle())
+                            case .failure:
+                                Image(systemName: "person.circle.fill")
+                                    .foregroundColor(Theme.textWhite)
+                                    .font(.system(size: 24))
+                            @unknown default:
+                                Image(systemName: "person.circle.fill")
+                                    .foregroundColor(Theme.textWhite)
+                                    .font(.system(size: 24))
+                            }
+                        }
+                    } else {
                     Image(systemName: "person.circle.fill")
                         .foregroundColor(Theme.textWhite)
                         .font(.system(size: 24))
+                    }
                 }
             }
             
@@ -424,10 +196,22 @@ struct AdminPropertyFormView: View {
                 }
             }
         }
-        .alert("Error", isPresented: $showError) {
+        .alert("error".localized, isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(errorMessage)
+        }
+        .alert("success".localized, isPresented: $showSuccessMessage) {
+            Button("OK", role: .cancel) {
+                dismiss()
+            }
+        } message: {
+            Text(successMessage)
+        }
+        .navigationDestination(item: $navigateToProperty) { property in
+            PropertyDetailView(property: property)
+                .environmentObject(localizationManager)
+                .environmentObject(currencyManager)
         }
         .task {
             await loadPropertyData()
@@ -440,9 +224,8 @@ struct AdminPropertyFormView: View {
                     var newData: [Data] = []
                     for item in newValue {
                         if let data = try await item.loadTransferable(type: Data.self) {
-                            // Resize and compress image
                             if let uiImage = UIImage(data: data) {
-                                let maxDimension: CGFloat = 1200 // Maximum dimension for either width or height
+                                let maxDimension: CGFloat = 1200
                                 let scale = min(maxDimension / uiImage.size.width, maxDimension / uiImage.size.height, 1.0)
                                 let newSize = CGSize(width: uiImage.size.width * scale, height: uiImage.size.height * scale)
                                 
@@ -472,43 +255,6 @@ struct AdminPropertyFormView: View {
                     }
                 }
             }
-        }
-    }
-    
-    private func whatsAppContactField() -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("WhatsApp")
-                .font(.caption)
-                .foregroundColor(Theme.textWhite.opacity(0.7))
-            
-            HStack {
-                // WhatsApp-specific icon with brand color
-                Image("whatsapp_icon") // Assumes you'll add a WhatsApp icon to Assets
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(Color(red: 37/255, green: 211/255, blue: 102/255)) // WhatsApp green
-                
-                TextField("", text: $contactWhatsapp)
-                    .keyboardType(.phonePad)
-                    .foregroundColor(Theme.textWhite)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                    .placeholder(when: contactWhatsapp.isEmpty) {
-                        Text("e.g. +1234567890")
-                            .foregroundColor(Theme.textWhite.opacity(0.5))
-                    }
-            }
-            .padding(12)
-            .background(Theme.cardBackground)
-            .cornerRadius(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(contactWhatsapp.isEmpty ? Color.clear : 
-                            (ContactInfo(whatsapp: contactWhatsapp).isValidWhatsApp() ? 
-                             Color.green : Color.red), 
-                     lineWidth: 2)
-            )
         }
     }
     
@@ -547,11 +293,37 @@ struct AdminPropertyFormView: View {
         // Validate input fields
         guard validateFields() else { return }
         
-        // Create property object
+        // Convert price to USD before saving
+        let priceInUSD = currencyManager.convert(price, from: priceCurrency)
+        
+        // Get current user ID
+        guard let userId = authManager.currentUser?.id else {
+            errorMessage = "User not authenticated"
+            showError = true
+            return
+        }
+        
+        do {
+            isLoading = true
+            
+            // Upload new images first
+            var finalImageURLs = imageURLs // Start with existing image URLs
+            for imageData in newImageData {
+                do {
+                    let imageURL = try await firebaseManager.uploadImage(imageData)
+                    finalImageURLs.append(imageURL)
+                } catch {
+                    print("Failed to upload image: \(error.localizedDescription)")
+                    throw error
+                }
+            }
+            
+            // Create property object with updated image URLs
         let propertyToSave = Property(
-            id: property?.id ?? UUID().uuidString,
+                id: property?.id ?? "",
+                userId: userId,
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            price: price,
+                price: priceInUSD,
             description: description.trimmingCharacters(in: .whitespacesAndNewlines),
             address: address.trimmingCharacters(in: .whitespacesAndNewlines),
             contact: ContactInfo(
@@ -565,29 +337,34 @@ struct AdminPropertyFormView: View {
             area: area,
             type: selectedType.rawValue,
             purpose: selectedPurpose.rawValue,
-            imageURLs: imageURLs,
+                imageURLs: finalImageURLs, // Use the updated image URLs
             createdAt: property?.createdAt ?? Date(),
             updatedAt: Date(),
-            // Optional: If you want to preserve existing coordinates
             latitude: property?.latitude ?? 0.0,
             longitude: property?.longitude ?? 0.0
         )
         
-        do {
-            isLoading = true
+            // Save the property and get the saved version
+            let savedProperty = try await firebaseManager.saveProperty(propertyToSave)
             
-            // Use the new saveProperty method which includes geocoding
-            _ = try await firebaseManager.saveProperty(propertyToSave)
-            
-            // Optional: show success message or navigate away
             await MainActor.run {
                 isLoading = false
-                dismiss()
+                if property == nil {
+                    // For new properties, show success message and navigate to detail view
+                    successMessage = "property_saved_success".localized
+                    showSuccessMessage = true
+                    navigateToProperty = savedProperty
+                } else {
+                    // For existing properties, show success message and dismiss
+                    successMessage = "property_updated_success".localized
+                    showSuccessMessage = true
+                }
             }
         } catch {
             await MainActor.run {
                 isLoading = false
                 errorMessage = error.localizedDescription
+                showError = true
             }
         }
     }
@@ -604,6 +381,9 @@ struct AdminPropertyFormView_Previews: PreviewProvider {
         NavigationView {
             AdminPropertyFormView(property: Property.example)
                 .environmentObject(FirebaseManager.shared)
+                .environmentObject(LocalizationManager.shared)
+                .environmentObject(CurrencyManager.shared)
+                .environmentObject(AuthManager.shared)
         }
     }
 }
@@ -618,5 +398,594 @@ extension View {
             then().opacity(shouldShow ? 1 : 0)
             self
         }
+    }
+}
+
+// MARK: - Progress Steps View
+private struct ProgressStepsView: View {
+    let steps: [String]
+    let currentStep: Int
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<steps.count, id: \.self) { index in
+                VStack(spacing: 4) {
+                    Circle()
+                        .fill(currentStep >= index ? Theme.primaryRed : Theme.cardBackground)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Text("\(index + 1)")
+                                .foregroundColor(currentStep >= index ? .white : Theme.textWhite.opacity(0.5))
+                        )
+                    
+                    Text(steps[index])
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(currentStep >= index ? Theme.textWhite : Theme.textWhite.opacity(0.5))
+                }
+                
+                if index < steps.count - 1 {
+                    Rectangle()
+                        .fill(currentStep > index ? Theme.primaryRed : Theme.cardBackground)
+                        .frame(height: 2)
+                        .padding(.horizontal, 8)
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+    }
+}
+
+// MARK: - Icon Helpers
+private extension PropertyType {
+    var icon: String {
+        switch self.rawValue.lowercased() {
+        case "house": return "house.fill"
+        case "apartment": return "building.2.fill"
+        case "condo": return "building.fill"
+        case "villa": return "house.lodge.fill"
+        case "land": return "leaf.fill"
+        default: return "house.fill"
+        }
+    }
+}
+
+private extension PropertyPurpose {
+    var icon: String {
+        switch self {
+        case .buy: return "cart.fill"
+        case .rent: return "key.fill"
+        case .seasonal: return "calendar"
+        case .all: return "square.grid.2x2.fill"
+        }
+    }
+}
+
+// MARK: - Property Type Selection View
+private struct PropertyTypeSelectionView: View {
+    @Binding var selectedType: PropertyType
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "building.fill")
+                    .foregroundColor(Theme.textWhite)
+                Text("property_type".localized)
+                    .foregroundColor(Theme.textWhite)
+                    .font(.headline)
+            }
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                ForEach(PropertyType.allCases.filter { $0 != .all }, id: \.self) { type in
+                    Button(action: { selectedType = type }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: type.icon)
+                                .font(.system(size: 24))
+                            Text(type.rawValue)
+                                .font(.subheadline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(selectedType == type ? Theme.primaryRed : Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selectedType == type ? Theme.primaryRed : Theme.textWhite.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        .foregroundColor(selectedType == type ? .white : Theme.textWhite)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Property Purpose Selection View
+private struct PropertyPurposeSelectionView: View {
+    @Binding var selectedPurpose: PropertyPurpose
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "tag.fill")
+                    .foregroundColor(Theme.textWhite)
+                Text("purpose".localized)
+                    .foregroundColor(Theme.textWhite)
+                    .font(.headline)
+            }
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                ForEach(PropertyPurpose.allCases.filter { $0 != .all }, id: \.self) { purpose in
+                    Button(action: { selectedPurpose = purpose }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: purpose.icon)
+                                .font(.system(size: 24))
+                            Text(purpose.rawValue)
+                                .font(.subheadline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(selectedPurpose == purpose ? Theme.primaryRed : Theme.cardBackground)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selectedPurpose == purpose ? Theme.primaryRed : Theme.textWhite.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        .foregroundColor(selectedPurpose == purpose ? .white : Theme.textWhite)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Price Input View
+private struct PriceInputView: View {
+    @Binding var price: Double
+    @Binding var priceCurrency: Currency
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "dollarsign.circle.fill")
+                    .foregroundColor(Theme.textWhite)
+                Text("price".localized)
+                    .foregroundColor(Theme.textWhite)
+                    .font(.headline)
+            }
+            
+            HStack(spacing: 12) {
+                TextField("", value: $price, format: .number)
+                    .keyboardType(.decimalPad)
+                    .frame(maxWidth: .infinity)
+                    .padding(12)
+                    .background(Theme.cardBackground)
+                    .cornerRadius(10)
+                    .foregroundColor(Theme.textWhite)
+                    .tint(Theme.primaryRed)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Theme.textWhite.opacity(0.2), lineWidth: 1)
+                    )
+                    .placeholder(when: price == 0) {
+                        Text("0")
+                            .foregroundColor(Theme.textWhite.opacity(0.5))
+                    }
+                
+                Picker("Currency", selection: $priceCurrency) {
+                    ForEach(Currency.allCases, id: \.self) { currency in
+                        Text(currency.rawValue.uppercased())
+                            .tag(currency)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 100)
+                .padding(12)
+                .background(Theme.cardBackground)
+                .cornerRadius(10)
+                .foregroundColor(Theme.textWhite)
+                .tint(Theme.primaryRed)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Theme.textWhite.opacity(0.2), lineWidth: 1)
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Form Content Views
+private struct BasicInfoView: View {
+    @Binding var title: String
+    @Binding var description: String
+    @Binding var selectedType: PropertyType
+    @Binding var selectedPurpose: PropertyPurpose
+    @Binding var price: Double
+    @Binding var priceCurrency: Currency
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                TextFormField(
+                    label: "property_title".localized,
+                    placeholder: "enter_property_title".localized,
+                    text: $title,
+                    icon: "house.fill"
+                )
+                
+                PropertyTypeSelectionView(selectedType: $selectedType)
+                PropertyPurposeSelectionView(selectedPurpose: $selectedPurpose)
+                
+                TextFormField(
+                    label: "description".localized,
+                    placeholder: "enter_property_description".localized,
+                    text: $description,
+                    icon: "doc.text.fill"
+                )
+                
+                PriceInputView(price: $price, priceCurrency: $priceCurrency)
+            }
+            .padding()
+        }
+    }
+}
+
+private struct LocationView: View {
+    @Binding var address: String
+    @Binding var city: String
+    @Binding var zipCode: String
+    @Binding var country: String
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                TextFormField(
+                    label: "address".localized,
+                    placeholder: "enter_address".localized,
+                    text: $address,
+                    icon: "mappin.circle.fill"
+                )
+                
+                TextFormField(
+                    label: "city".localized,
+                    placeholder: "enter_city".localized,
+                    text: $city,
+                    icon: "building.2.fill"
+                )
+                
+                TextFormField(
+                    label: "zip_code".localized,
+                    placeholder: "enter_zip_code".localized,
+                    text: $zipCode,
+                    icon: "number.circle.fill"
+                )
+                
+                TextFormField(
+                    label: "country".localized,
+                    placeholder: "enter_country".localized,
+                    text: $country,
+                    icon: "globe.europe.africa.fill"
+                )
+            }
+            .padding()
+        }
+    }
+}
+
+private struct DetailsView: View {
+    @Binding var bedrooms: Int
+    @Binding var bathrooms: Int
+    @Binding var area: Double
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                NumericFormField(
+                    "bedrooms".localized,
+                    value: $bedrooms,
+                    icon: "bed.double.fill"
+                )
+                
+                NumericFormField(
+                    "bathrooms".localized,
+                    value: $bathrooms,
+                    icon: "shower.fill"
+                )
+                
+                NumericFormField(
+                    "area".localized,
+                    value: $area,
+                    icon: "square.fill"
+                )
+            }
+            .padding()
+        }
+    }
+}
+
+private struct PhotosView: View {
+    @Binding var imageURLs: [String]
+    @Binding var newImageData: [Data]
+    @Binding var selectedImages: [PhotosPickerItem]
+    @Binding var isProcessingImages: Bool
+    let maxImages: Int
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Image Counter
+                HStack {
+                    Image(systemName: "photo.stack.fill")
+                        .foregroundColor(Theme.textWhite)
+                    Text("\(imageURLs.count + newImageData.count)/\(maxImages) \("photos".localized)")
+                        .foregroundColor(Theme.textWhite)
+                    Spacer()
+                    if imageURLs.count + newImageData.count < maxImages {
+                        PhotosPicker(
+                            selection: $selectedImages,
+                            maxSelectionCount: maxImages - (imageURLs.count + newImageData.count),
+                            matching: .images
+                        ) {
+                            Label("add_photos".localized, systemImage: "plus.circle.fill")
+                                .foregroundColor(Theme.primaryRed)
+                        }
+                    }
+                }
+                
+                if isProcessingImages {
+                    ProgressView("processing_images".localized)
+                        .tint(Theme.primaryRed)
+                }
+                
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
+                    // Show existing images
+                    ForEach(imageURLs, id: \.self) { imageURL in
+                        ImageCell(imageURL: imageURL, onDelete: {
+                            imageURLs.removeAll { $0 == imageURL }
+                        })
+                    }
+                    
+                    // Show new images
+                    ForEach(newImageData.indices, id: \.self) { index in
+                        if let uiImage = UIImage(data: newImageData[index]) {
+                            ImageCell(uiImage: uiImage, onDelete: {
+                                newImageData.remove(at: index)
+                            })
+                        }
+                    }
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+private struct ImageCell: View {
+    let imageURL: String?
+    let uiImage: UIImage?
+    let onDelete: () -> Void
+    
+    init(imageURL: String, onDelete: @escaping () -> Void) {
+        self.imageURL = imageURL
+        self.uiImage = nil
+        self.onDelete = onDelete
+    }
+    
+    init(uiImage: UIImage, onDelete: @escaping () -> Void) {
+        self.imageURL = nil
+        self.uiImage = uiImage
+        self.onDelete = onDelete
+    }
+    
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            if let imageURL = imageURL {
+                AsyncImage(url: URL(string: imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .tint(Theme.primaryRed)
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        Image(systemName: "photo.fill")
+                            .foregroundColor(Theme.textWhite)
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else if let uiImage = uiImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            }
+            
+            Button(action: onDelete) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.red)
+                    .background(Circle().fill(Color.white))
+            }
+            .padding(4)
+        }
+        .frame(height: 120)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+    }
+}
+
+private struct ContactView: View {
+    @Binding var contactWhatsapp: String
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                whatsAppContactField(contactWhatsapp: $contactWhatsapp)
+            }
+            .padding()
+        }
+    }
+    
+    private func whatsAppContactField(contactWhatsapp: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("whatsapp".localized)
+                .font(.caption)
+                .foregroundColor(Theme.textWhite.opacity(0.7))
+            
+            HStack {
+                Image("whatsapp_icon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(Color(red: 37/255, green: 211/255, blue: 102/255))
+                
+                TextField("", text: contactWhatsapp)
+                    .keyboardType(.phonePad)
+                    .foregroundColor(Theme.textWhite)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .placeholder(when: contactWhatsapp.wrappedValue.isEmpty) {
+                        Text("whatsapp_example".localized)
+                            .foregroundColor(Theme.textWhite.opacity(0.5))
+                    }
+            }
+            .padding(12)
+            .background(Theme.cardBackground)
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(contactWhatsapp.wrappedValue.isEmpty ? Color.clear : 
+                            (ContactInfo(whatsapp: contactWhatsapp.wrappedValue).isValidWhatsApp() ? 
+                             Color.green : Color.red), 
+                     lineWidth: 2)
+            )
+        }
+    }
+}
+
+// MARK: - Navigation Buttons View
+private struct NavigationButtonsView: View {
+    let currentStep: Int
+    let totalSteps: Int
+    let onPrevious: () -> Void
+    let onNext: () -> Void
+    let onSave: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            if currentStep > 0 {
+                Button(action: onPrevious) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("previous".localized)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                }
+                .secondaryButton()
+            }
+            
+            if currentStep < totalSteps - 1 {
+                Button(action: onNext) {
+                    HStack {
+                        Text("next".localized)
+                        Image(systemName: "chevron.right")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                }
+                .primaryButton()
+            } else {
+                Button(action: onSave) {
+                    Text("save_property".localized)
+                        .foregroundColor(Theme.textWhite)
+                }
+                .primaryButton()
+                .disabled(false)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+    }
+}
+
+// MARK: - Main Content View
+private struct MainContentView: View {
+    @Binding var currentStep: Int
+    @Binding var title: String
+    @Binding var description: String
+    @Binding var selectedType: PropertyType
+    @Binding var selectedPurpose: PropertyPurpose
+    @Binding var price: Double
+    @Binding var priceCurrency: Currency
+    @Binding var address: String
+    @Binding var city: String
+    @Binding var zipCode: String
+    @Binding var country: String
+    @Binding var bedrooms: Int
+    @Binding var bathrooms: Int
+    @Binding var area: Double
+    @Binding var imageURLs: [String]
+    @Binding var newImageData: [Data]
+    @Binding var selectedImages: [PhotosPickerItem]
+    @Binding var isProcessingImages: Bool
+    @Binding var contactWhatsapp: String
+    let maxImages: Int
+    
+    var body: some View {
+        TabView(selection: $currentStep) {
+            BasicInfoView(
+                title: $title,
+                description: $description,
+                selectedType: $selectedType,
+                selectedPurpose: $selectedPurpose,
+                price: $price,
+                priceCurrency: $priceCurrency
+            )
+            .tag(0)
+            
+            LocationView(
+                address: $address,
+                city: $city,
+                zipCode: $zipCode,
+                country: $country
+            )
+            .tag(1)
+            
+            DetailsView(
+                bedrooms: $bedrooms,
+                bathrooms: $bathrooms,
+                area: $area
+            )
+            .tag(2)
+            
+            PhotosView(
+                imageURLs: $imageURLs,
+                newImageData: $newImageData,
+                selectedImages: $selectedImages,
+                isProcessingImages: $isProcessingImages,
+                maxImages: maxImages
+            )
+            .tag(3)
+            
+            ContactView(contactWhatsapp: $contactWhatsapp)
+                .tag(4)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }

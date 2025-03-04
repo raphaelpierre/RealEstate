@@ -3,16 +3,11 @@ import SwiftUI
 struct FavoritesView: View {
     @EnvironmentObject private var firebaseManager: FirebaseManager
     @EnvironmentObject private var authManager: AuthManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isLoading = false
-    
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: "en_US")
-        return formatter
-    }()
     
     private var favorites: [Property] {
         firebaseManager.properties.filter { $0.isFavorite }
@@ -21,12 +16,7 @@ struct FavoritesView: View {
     // MARK: - Property Info Card
     private struct PropertyInfoCard: View {
         let property: Property
-        
-        private let currencyFormatter: NumberFormatter = {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            return formatter
-        }()
+        @EnvironmentObject private var currencyManager: CurrencyManager
         
         var body: some View {
             VStack(alignment: .leading, spacing: 16) {
@@ -37,7 +27,7 @@ struct FavoritesView: View {
                         .foregroundColor(Theme.textWhite)
                         .lineLimit(2)
                     
-                    Text(currencyFormatter.string(from: NSNumber(value: property.price)) ?? "$0")
+                    Text(currencyManager.formatPrice(property.price))
                         .font(Theme.Typography.title)
                         .foregroundColor(Theme.primaryRed)
                 }
@@ -128,7 +118,11 @@ struct FavoritesView: View {
                             GridItem(.adaptive(minimum: 300, maximum: 400), spacing: 20)
                         ], spacing: Theme.padding) {
                             ForEach(favorites) { property in
-                                NavigationLink(destination: PropertyDetailView(property: property)) {
+                                NavigationLink(destination: PropertyDetailView(property: property)
+                                    .environmentObject(firebaseManager)
+                                    .environmentObject(authManager)
+                                    .environmentObject(localizationManager)
+                                    .environmentObject(currencyManager)) {
                                     VStack(alignment: .leading, spacing: 0) {
                                         // Image with heart button overlay
                                         ZStack(alignment: .topTrailing) {
@@ -206,7 +200,7 @@ struct FavoritesView: View {
                                                     .font(Theme.Typography.heading)
                                                     .foregroundColor(Theme.textWhite)
                                                 
-                                                Text(currencyFormatter.string(from: NSNumber(value: property.price)) ?? "$0")
+                                                Text(currencyManager.formatPrice(property.price))
                                                     .font(Theme.Typography.title)
                                                     .foregroundColor(Theme.primaryRed)
                                             }

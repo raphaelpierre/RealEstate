@@ -1,0 +1,135 @@
+// General
+"app_name" = "Real Estate";
+"loading" = "Loading...";
+"error" = "Error";
+"retry" = "Retry";
+"cancel" = "Cancel";
+"save" = "Save";
+"delete" = "Delete";
+"edit" = "Edit";
+"done" = "Done";
+
+// Authentication
+"login" = "Login";
+"signup" = "Sign Up";
+"email" = "Email";
+"password" = "Password";
+"forgot_password" = "Forgot Password?";
+"logout" = "Log Out";
+"profile" = "Profile";
+"sign_out" = "Sign Out";
+"sign_out_description" = "Sign out of your account";
+
+// Property Listings
+"properties" = "Properties";
+"property_details" = "Property Details";
+"price" = "Price";
+"bedrooms" = "Bedrooms";
+"bathrooms" = "Bathrooms";
+"area" = "Area";
+"address" = "Address";
+"description" = "Description";
+"contact" = "Contact";
+"favorites" = "Favorites";
+"no_favorites" = "You don't have any favorites yet";
+"add_to_favorites" = "Add to Favorites";
+"remove_from_favorites" = "Remove from Favorites";
+"view_favorites_description" = "View your favorite properties";
+
+// Filters
+"filters" = "Filters";
+"min_price" = "Min Price";
+"max_price" = "Max Price";
+"property_type" = "Property Type";
+"sort_by" = "Sort By";
+"apply_filters" = "Apply Filters";
+"reset_filters" = "Reset Filters";
+
+// Property Types
+"house" = "House";
+"apartment" = "Apartment";
+"condo" = "Condo";
+"villa" = "Villa";
+"land" = "Land";
+
+// Admin
+"admin" = "Admin";
+"admin_tools" = "Admin Tools";
+"add_property" = "Add Property";
+"edit_property" = "Edit Property";
+"delete_property" = "Delete Property";
+"property_title" = "Property Title";
+"upload_images" = "Upload Images";
+"select_location" = "Select Location";
+"update_property_locations" = "Update Property Locations";
+"update_property_locations_message" = "This will attempt to add geographic coordinates to all properties without location data. This may take a few minutes.";
+"property_management" = "Property Management";
+"admin_property_description" = "Add, edit, or remove properties";
+
+// Map
+"map" = "Map";
+"list" = "List";
+"view_on_map" = "View on Map";
+
+// Errors
+"login_error" = "Failed to login. Please check your credentials.";
+"signup_error" = "Failed to create account. Please try again.";
+"load_properties_error" = "Failed to load properties. Please try again.";
+"save_property_error" = "Failed to save property. Please try again.";
+"network_error" = "Network error. Please check your connection.";
+
+// Additional Terms
+"square_meters" = "square meters";
+"square_feet" = "square feet";
+"for_sale" = "For Sale";
+"for_rent" = "For Rent";
+"monthly" = "monthly";
+"yearly" = "yearly";
+"furnished" = "Furnished";
+"unfurnished" = "Unfurnished";
+"new_construction" = "New Construction";
+"year_built" = "Year Built";
+"garage" = "Garage";
+"parking" = "Parking";
+"balcony" = "Balcony";
+"garden" = "Garden";
+"pool" = "Pool";
+"elevator" = "Elevator";
+"air_conditioning" = "Air Conditioning";
+"heating" = "Heating";
+"security_system" = "Security System";
+
+// Success Messages
+"property_added_success" = "Property added successfully";
+"property_updated_success" = "Property updated successfully";
+"property_deleted_success" = "Property deleted successfully";
+"account_created_success" = "Account created successfully";
+"password_reset_email_sent" = "Password reset email sent";
+"location_permission_needed" = "Location permission is needed to show nearby properties";
+"no_properties_found" = "No properties found";
+"filter_no_results" = "No results for these filters";
+
+/* Property Detail View */
+"features" = "Features";
+"schedule_viewing" = "Schedule Viewing";
+"contact_agent" = "Contact Agent";
+"save_property" = "Save Property";
+
+/* Language Selection */
+"select_language" = "Select Language";
+"change_language_description" = "Change application language";
+
+/* Profile View */
+"menu" = "Menu";
+"my_account" = "My Account";
+"session" = "Session";
+
+/* Demo App */
+"localization_demo" = "Localization Demo";
+"examples" = "Examples";
+"view_property_details" = "View Property Details";
+"language" = "Language";
+
+/* ContentView */
+"home" = "Home";
+"update" = "Update"; 

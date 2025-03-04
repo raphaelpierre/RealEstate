@@ -609,7 +609,7 @@ struct ProfileView: View {
                     }
                 }
             } else {
-                Button("OK") { }
+            Button("OK") { }
             }
         } message: {
             Text(alertMessage)
