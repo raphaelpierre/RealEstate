@@ -61,7 +61,7 @@ struct PropertyDetailView: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                        case .failure(let error):
+                        case .failure(_):
                             VStack(spacing: 12) {
                                 Image(systemName: "photo")
                                     .font(.system(size: 40))
