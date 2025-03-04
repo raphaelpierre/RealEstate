@@ -8,8 +8,6 @@ struct PropertyDetailView: View {
     @EnvironmentObject private var currencyManager: CurrencyManager
     @State private var showError = false
     @State private var errorMessage = ""
-    @State private var imageLoadError: String?
-    @State private var showImageError = false
     @State private var failedImageURLs: Set<String> = []
     let property: Property
     @State private var currentProperty: Property
@@ -51,58 +49,57 @@ struct PropertyDetailView: View {
     }
     
     private var imageGallery: some View {
-        TabView {
-            ForEach(currentProperty.imageURLs, id: \.self) { imageURL in
-                AsyncImage(url: URL(string: imageURL)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryRed))
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    case .failure(let error):
-                        VStack {
-                            Image(systemName: "photo")
-                                .font(.system(size: 40))
-                                .foregroundColor(Theme.textWhite.opacity(0.5))
-                            if failedImageURLs.contains(imageURL) {
+        VStack {
+            TabView {
+                ForEach(currentProperty.imageURLs, id: \.self) { imageURL in
+                    AsyncImage(url: URL(string: imageURL)) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryRed))
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        case .failure(let error):
+                            VStack(spacing: 12) {
+                                Image(systemName: "photo")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(Theme.textWhite.opacity(0.5))
+                                Text("Failed to load image")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Theme.textWhite.opacity(0.7))
                                 Button("Retry") {
                                     failedImageURLs.remove(imageURL)
                                 }
                                 .foregroundColor(Theme.primaryRed)
-                                .padding(.top, 8)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Theme.cardBackground)
+                                .cornerRadius(8)
                             }
-                        }
-                        .onAppear {
-                            if !failedImageURLs.contains(imageURL) {
-                                failedImageURLs.insert(imageURL)
-                                if imageLoadError == nil {
-                                    imageLoadError = "Some images failed to load. Tap 'Retry' to attempt loading again."
-                                    showImageError = true
+                            .onAppear {
+                                if !failedImageURLs.contains(imageURL) {
+                                    failedImageURLs.insert(imageURL)
                                 }
                             }
+                        @unknown default:
+                            EmptyView()
                         }
-                    @unknown default:
-                        EmptyView()
                     }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 300)
+                    .clipped()
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 300)
-                .clipped()
             }
-        }
-        .tabViewStyle(PageTabViewStyle())
-        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
-        .alert("Image Loading Error", isPresented: $showImageError) {
-            Button("OK") {
-                showImageError = false
-                imageLoadError = nil
-            }
-        } message: {
-            if let error = imageLoadError {
-                Text(error)
+            .tabViewStyle(PageTabViewStyle())
+            .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+            
+            if !failedImageURLs.isEmpty {
+                Text("\(failedImageURLs.count) image\(failedImageURLs.count > 1 ? "s" : "") failed to load")
+                    .font(.system(size: 14))
+                    .foregroundColor(Theme.textWhite.opacity(0.7))
+                    .padding(.top, 8)
             }
         }
     }
