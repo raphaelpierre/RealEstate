@@ -318,12 +318,6 @@ final class AuthManager: ObservableObject {
                     throw AuthError.userNotAuthenticated
                 case .quotaExceeded:
                     throw AuthError.networkError
-                case .missingAndroidPackageName:
-                    throw AuthError.noClientId
-                case .missingIosBundleID:
-                    throw AuthError.noClientId
-                case .appDeletedByUser:
-                    throw AuthError.userNotAuthenticated
                 case .keychainError:
                     throw AuthError.keychain
                 case .internalError:
@@ -332,11 +326,7 @@ final class AuthManager: ObservableObject {
                     throw AuthError.userNotAuthenticated
                 case .customTokenMismatch:
                     throw AuthError.userNotAuthenticated
-                case .invalidCredential:
-                    throw AuthError.userNotAuthenticated
                 case .captchaCheckFailed:
-                    throw AuthError.userNotAuthenticated
-                case .invalidAppCheckToken:
                     throw AuthError.userNotAuthenticated
                 case .webContextAlreadyPresented:
                     throw AuthError.userNotAuthenticated
@@ -391,86 +381,6 @@ final class AuthManager: ObservableObject {
                 case .emailChangeNeedsVerification:
                     throw AuthError.userNotAuthenticated
                 case .missingOrInvalidNonce:
-                    throw AuthError.userNotAuthenticated
-                case .blocked:
-                    throw AuthError.userDisabled
-                case .popupBlocked:
-                    throw AuthError.userNotAuthenticated
-                case .popupClosedByUser:
-                    throw AuthError.userNotAuthenticated
-                case .invalidRecipientEmail:
-                    throw AuthError.userNotAuthenticated
-                case .invalidSender:
-                    throw AuthError.userNotAuthenticated
-                case .invalidMessagePayload:
-                    throw AuthError.userNotAuthenticated
-                case .invalidVerificationCode:
-                    throw AuthError.userNotAuthenticated
-                case .invalidVerificationID:
-                    throw AuthError.userNotAuthenticated
-                case .captchaCheckFailed:
-                    throw AuthError.userNotAuthenticated
-                case .invalidAppCheckToken:
-                    throw AuthError.userNotAuthenticated
-                case .webContextAlreadyPresented:
-                    throw AuthError.userNotAuthenticated
-                case .webContextCancelled:
-                    throw AuthError.userNotAuthenticated
-                case .appVerificationUserInteractionFailure:
-                    throw AuthError.userNotAuthenticated
-                case .invalidClientID:
-                    throw AuthError.noClientId
-                case .webNetworkRequestFailed:
-                    throw AuthError.networkError
-                case .webSignInUserInteractionFailure:
-                    throw AuthError.userNotAuthenticated
-                case .localPlayerNotAuthenticated:
-                    throw AuthError.userNotAuthenticated
-                case .nullUser:
-                    throw AuthError.userNotAuthenticated
-                case .dynamicLinkNotActivated:
-                    throw AuthError.userNotAuthenticated
-                case .invalidProviderID:
-                    throw AuthError.userNotAuthenticated
-                case .tenantIDMismatch:
-                    throw AuthError.userNotAuthenticated
-                case .unsupportedTenantOperation:
-                    throw AuthError.userNotAuthenticated
-                case .invalidDynamicLinkDomain:
-                    throw AuthError.noClientId
-                case .rejectedCredential:
-                    throw AuthError.userNotAuthenticated
-                case .gameKitNotLinked:
-                    throw AuthError.userNotAuthenticated
-                case .secondFactorRequired:
-                    throw AuthError.userNotAuthenticated
-                case .missingMultiFactorSession:
-                    throw AuthError.userNotAuthenticated
-                case .missingMultiFactorInfo:
-                    throw AuthError.userNotAuthenticated
-                case .invalidMultiFactorSession:
-                    throw AuthError.userNotAuthenticated
-                case .multiFactorInfoNotFound:
-                    throw AuthError.userNotAuthenticated
-                case .adminRestrictedOperation:
-                    throw AuthError.adminRequired
-                case .unverifiedEmail:
-                    throw AuthError.userNotAuthenticated
-                case .secondFactorAlreadyEnrolled:
-                    throw AuthError.userNotAuthenticated
-                case .maximumSecondFactorCountExceeded:
-                    throw AuthError.userNotAuthenticated
-                case .unsupportedFirstFactor:
-                    throw AuthError.userNotAuthenticated
-                case .emailChangeNeedsVerification:
-                    throw AuthError.userNotAuthenticated
-                case .missingOrInvalidNonce:
-                    throw AuthError.userNotAuthenticated
-                case .blocked:
-                    throw AuthError.userDisabled
-                case .popupBlocked:
-                    throw AuthError.userNotAuthenticated
-                case .popupClosedByUser:
                     throw AuthError.userNotAuthenticated
                 @unknown default:
                     throw AuthError.unknown
