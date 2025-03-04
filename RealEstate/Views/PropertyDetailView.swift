@@ -4,11 +4,16 @@ struct PropertyDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var firebaseManager: FirebaseManager
     @EnvironmentObject private var authManager: AuthManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var currencyManager: CurrencyManager
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var imageLoadError: String?
+    @State private var showImageError = false
     let property: Property
     @State private var currentProperty: Property
     @State private var isFavoriteProcessing = false
+    @State private var isFavorite = false
     
     init(property: Property) {
         self.property = property
@@ -16,10 +21,32 @@ struct PropertyDetailView: View {
     }
     
     private var formattedPrice: String {
-        let currencyFormatter = NumberFormatter()
-        currencyFormatter.numberStyle = .currency
-        currencyFormatter.locale = Locale(identifier: "en_US")
-        return currencyFormatter.string(from: NSNumber(value: currentProperty.price)) ?? "$0"
+        return currencyManager.formatPrice(currencyManager.convert(currentProperty.price))
+    }
+    
+    private func toggleFavorite() {
+        guard authManager.isAuthenticated else {
+            errorMessage = "Please sign in to add favorites"
+            showError = true
+            return
+        }
+        
+        isFavoriteProcessing = true
+        
+        Task {
+            do {
+                try await firebaseManager.toggleFavorite(for: currentProperty)
+                isFavorite.toggle()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            isFavoriteProcessing = false
+        }
+    }
+    
+    private func checkFavoriteStatus() {
+        isFavorite = firebaseManager.isFavorite(currentProperty.id)
     }
     
     private var imageGallery: some View {
@@ -34,9 +61,13 @@ struct PropertyDetailView: View {
                         image
                             .resizable()
                             .scaledToFill()
-                    case .failure(_):
+                    case .failure(let error):
                         Image(systemName: "photo")
                             .foregroundColor(Theme.textWhite.opacity(0.5))
+                            .onAppear {
+                                imageLoadError = "Failed to load image from URL: \(imageURL)\nError: \(error.localizedDescription)"
+                                showImageError = true
+                            }
                     @unknown default:
                         EmptyView()
                     }
@@ -48,13 +79,22 @@ struct PropertyDetailView: View {
         }
         .tabViewStyle(PageTabViewStyle())
         .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+        .alert("Image Loading Error", isPresented: $showImageError) {
+            Button("OK") {
+                showImageError = false
+                imageLoadError = nil
+            }
+        } message: {
+            if let error = imageLoadError {
+                Text(error)
+            }
+        }
     }
     
     private func openWhatsApp() {
         guard let whatsappNumber = currentProperty.contact.whatsapp.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               !whatsappNumber.isEmpty,
               let url = URL(string: "https://wa.me/\(whatsappNumber)") else {
-            // Show an alert if WhatsApp number is invalid
             errorMessage = "Invalid WhatsApp number"
             showError = true
             return
@@ -64,31 +104,36 @@ struct PropertyDetailView: View {
     }
     
     private var contactSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Contact")
-                .font(Theme.Typography.caption)
-                .foregroundColor(Theme.textWhite)
-                .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "message")
+                    .font(.system(size: 24))
+                    .foregroundColor(Theme.primaryRed)
+                
+                Text("contact".localized)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(Theme.textWhite)
+            }
             
             if !currentProperty.contact.whatsapp.isEmpty {
                 Button(action: openWhatsApp) {
                     HStack {
-                        Image("whatsapp_icon") // Assumes you have a WhatsApp icon in Assets
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(Color(red: 37/255, green: 211/255, blue: 102/255))
-                        
-                        Text("Contact via WhatsApp")
-                            .foregroundColor(Theme.textWhite)
-                            .font(Theme.Typography.body)
+                        Image(systemName: "message.fill")
+                            .font(.system(size: 20))
+                        Text("contact_agent".localized)
+                            .font(.system(size: 16, weight: .medium))
                     }
-                    .padding(12)
-                    .background(Theme.cardBackground)
-                    .cornerRadius(10)
+                    .foregroundColor(Theme.textWhite)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Theme.primaryRed)
+                    .cornerRadius(8)
                 }
             }
         }
+        .padding()
+        .background(Theme.cardBackground)
+        .cornerRadius(12)
     }
     
     var body: some View {
@@ -97,282 +142,116 @@ struct PropertyDetailView: View {
                 .ignoresSafeArea()
             
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.padding) {
+                VStack(alignment: .leading, spacing: 24) {
                     // Image Gallery
                     imageGallery
                         .frame(height: 300)
                     
-                    VStack(alignment: .leading, spacing: Theme.padding) {
-                        // Title and Price Section
+                    // Property Details
+                    VStack(alignment: .leading, spacing: 24) {
+                        // Title and Price
                         VStack(alignment: .leading, spacing: 8) {
                             Text(currentProperty.title)
-                                .font(Theme.Typography.heading)
+                                .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(Theme.textWhite)
                             
                             Text(formattedPrice)
-                                .font(Theme.Typography.title)
+                                .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(Theme.primaryRed)
                         }
                         
-                        // Type and Purpose Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Property Details")
-                                .font(Theme.Typography.caption)
-                                .foregroundColor(Theme.textWhite)
-                                .fontWeight(.semibold)
+                        // Location
+                        HStack {
+                            Image(systemName: "location")
+                                .foregroundColor(Theme.primaryRed)
+                            Text("\(currentProperty.city), \(currentProperty.country)")
+                                .font(.system(size: 16))
+                                .foregroundColor(Theme.textWhite.opacity(0.7))
+                        }
+                        
+                        // Property Features
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(Theme.primaryRed)
+                                
+                                Text("property_features".localized)
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(Theme.textWhite)
+                            }
                             
                             HStack(spacing: 16) {
-                                Label {
-                                    Text(currentProperty.type)
-                                        .foregroundColor(Theme.textWhite.opacity(0.7))
-                                } icon: {
-                                    Image(systemName: "house.fill")
-                                        .foregroundColor(Theme.primaryRed)
-                                }
-                                
-                                Label {
-                                    Text(currentProperty.purpose)
-                                        .foregroundColor(Theme.textWhite.opacity(0.7))
-                                } icon: {
-                                    Image(systemName: currentProperty.purpose.lowercased() == "rent" ? "key.fill" : "cart.fill")
-                                        .foregroundColor(Theme.primaryRed)
-                                }
+                                PropertyFeature(icon: "bed.double", value: "\(currentProperty.bedrooms)")
+                                PropertyFeature(icon: "shower", value: "\(currentProperty.bathrooms)")
+                                PropertyFeature(icon: "ruler", value: "\(Int(currentProperty.area))m²")
                             }
-                            .font(Theme.Typography.caption)
                         }
+                        .padding()
+                        .background(Theme.cardBackground)
+                        .cornerRadius(12)
                         
-                        // Features Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Features")
-                                .font(Theme.Typography.caption)
-                                .foregroundColor(Theme.textWhite)
-                                .fontWeight(.semibold)
-                            
-                            HStack(spacing: 24) {
-                                Label {
-                                    Text("\(currentProperty.bedrooms) Bedrooms")
-                                        .foregroundColor(Theme.textWhite.opacity(0.7))
-                                } icon: {
-                                    Image(systemName: "bed.double.fill")
-                                        .foregroundColor(Theme.primaryRed)
-                                }
+                        // Description
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "text.alignleft")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(Theme.primaryRed)
                                 
-                                Label {
-                                    Text("\(currentProperty.bathrooms) Bathrooms")
-                                        .foregroundColor(Theme.textWhite.opacity(0.7))
-                                } icon: {
-                                    Image(systemName: "shower.fill")
-                                        .foregroundColor(Theme.primaryRed)
-                                }
-                                
-                                Label {
-                                    Text("\(Int(currentProperty.area))m²")
-                                        .foregroundColor(Theme.textWhite.opacity(0.7))
-                                } icon: {
-                                    Image(systemName: "square.fill")
-                                        .foregroundColor(Theme.primaryRed)
-                                }
-                            }
-                            .font(Theme.Typography.caption)
-                        }
-                        
-                        // Location Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Location")
-                                .font(Theme.Typography.caption)
-                                .foregroundColor(Theme.textWhite)
-                                .fontWeight(.semibold)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                if !currentProperty.address.isEmpty {
-                                    Label {
-                                        Text(currentProperty.address)
-                                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                                    } icon: {
-                                        Image(systemName: "location.fill")
-                                            .foregroundColor(Theme.primaryRed)
-                                    }
-                                }
-                                
-                                if !currentProperty.city.isEmpty {
-                                    Label {
-                                        Text(currentProperty.city)
-                                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                                    } icon: {
-                                        Image(systemName: "building.2.fill")
-                                            .foregroundColor(Theme.primaryRed)
-                                    }
-                                }
-                                
-                                if !currentProperty.zipCode.isEmpty {
-                                    Label {
-                                        Text(currentProperty.zipCode)
-                                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                                    } icon: {
-                                        Image(systemName: "mail.fill")
-                                            .foregroundColor(Theme.primaryRed)
-                                    }
-                                }
-                                
-                                if !currentProperty.country.isEmpty {
-                                    Label {
-                                        Text(currentProperty.country)
-                                            .foregroundColor(Theme.textWhite.opacity(0.7))
-                                    } icon: {
-                                        Image(systemName: "globe.europe.africa.fill")
-                                            .foregroundColor(Theme.primaryRed)
-                                    }
-                                }
-                            }
-                            .font(Theme.Typography.caption)
-                        }
-                        
-                        // Description Section
-                        if !currentProperty.description.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Description")
-                                    .font(Theme.Typography.caption)
+                                Text("description".localized)
+                                    .font(.system(size: 20, weight: .semibold))
                                     .foregroundColor(Theme.textWhite)
-                                    .fontWeight(.semibold)
-                                
-                                Text(currentProperty.description)
-                                    .font(Theme.Typography.body)
-                                    .foregroundColor(Theme.textWhite.opacity(0.7))
                             }
+                            
+                            Text(currentProperty.description)
+                                .font(.system(size: 16))
+                                .foregroundColor(Theme.textWhite.opacity(0.7))
                         }
+                        .padding()
+                        .background(Theme.cardBackground)
+                        .cornerRadius(12)
                         
                         // Contact Section
                         contactSection
                     }
-                    .padding(.horizontal)
+                    .padding()
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.backgroundBlack, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text(currentProperty.title)
-                    .font(Theme.Typography.heading)
-                    .foregroundColor(Theme.textWhite)
-                    .lineLimit(1)
-            }
-            
             ToolbarItem(placement: .navigationBarTrailing) {
-                if authManager.isAuthenticated {
-                    Button(action: {
-                        Task {
-                            isFavoriteProcessing = true
-                            do {
-                                try await firebaseManager.toggleFavorite(for: currentProperty)
-                                // Update the current property's favorite status
-                                currentProperty.isFavorite.toggle()
-                            } catch {
-                                errorMessage = error.localizedDescription
-                                showError = true
-                            }
-                            isFavoriteProcessing = false
-                        }
-                    }) {
-                        Group {
-                            if isFavoriteProcessing {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: Theme.textWhite))
-                            } else {
-                                Image(systemName: currentProperty.isFavorite ? "heart.fill" : "heart")
-                                    .foregroundColor(currentProperty.isFavorite ? Theme.primaryRed : Theme.textWhite)
-                                    .font(.title3)
-                                    .contentShape(Rectangle())
-                            }
-                        }
-                        .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isFavoriteProcessing)
-                } else {
-                    // Debug: Print when auth check fails
-                    Text("")
-                        .onAppear {
-                            print("⚠️ Auth check failed in toolbar - isAuthenticated: \(authManager.isAuthenticated)")
-                        }
+                Button(action: toggleFavorite) {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .foregroundColor(isFavorite ? Theme.primaryRed : Theme.textWhite)
                 }
+                .disabled(isFavoriteProcessing)
             }
         }
         .onAppear {
-            print("👤 Auth Status: \(authManager.isAuthenticated)")
-            print("👤 Current User: \(authManager.currentUser != nil ? "Logged in" : "nil")")
-            print("🏠 Property: \(currentProperty.title) (ID: \(currentProperty.id))")
+            checkFavoriteStatus()
         }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
+        .alert("error".localized, isPresented: $showError) {
+            Button("OK") { }
         } message: {
             Text(errorMessage)
         }
     }
 }
 
-// MARK: - Helper Views
-private struct DetailChip: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .foregroundColor(Theme.primaryRed)
-            Text(text)
-                .font(Theme.Typography.caption)
-        }
-        .foregroundColor(Theme.textWhite)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cornerRadius)
-    }
-}
-
-private struct LocationRow: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        Label {
-            Text(text)
-                .foregroundColor(Theme.textWhite.opacity(0.7))
-        } icon: {
-            Image(systemName: icon)
-                .foregroundColor(Theme.primaryRed)
-        }
-    }
-}
-
-// MARK: - Preview
-struct PropertyDetailView_Previews: PreviewProvider {
-    static var sampleProperty: Property {
-        Property(
-            title: "Luxury Villa",
-            price: 1250000,
-            description: "Beautiful modern villa with amazing views",
-            address: "123 Ocean Drive, Miami Beach, FL",
-            zipCode: "33139",
-            city: "Miami Beach",
-            country: "USA",
-            bedrooms: 4,
-            bathrooms: 3,
-            area: 250,
-            type: "Villa",
-            purpose: "Sale",
-            imageURLs: []
-        )
-    }
-    
-    static var previews: some View {
-        NavigationView {
-            PropertyDetailView(property: sampleProperty)
-                .environmentObject(FirebaseManager.shared)
-                .environmentObject(AuthManager.shared)
-        }
-    }
+#Preview {
+    PropertyDetailView(property: Property(
+        title: "Sample Property",
+        price: 500000,
+        description: "A beautiful property with great features",
+        address: "123 Main St",
+        bedrooms: 3,
+        bathrooms: 2,
+        area: 150,
+        imageURLs: []
+    ))
+    .environmentObject(FirebaseManager.shared)
+    .environmentObject(AuthManager.shared)
+    .environmentObject(LocalizationManager.shared)
+    .environmentObject(CurrencyManager.shared)
 }
