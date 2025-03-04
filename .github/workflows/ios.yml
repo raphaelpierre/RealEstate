@@ -101,9 +101,12 @@ jobs:
             -enableCodeCoverage YES \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -verbose \
+            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO || {
+            CODE_SIGNING_ALLOWED=NO \
+            GCC_OPTIMIZATION_LEVEL=0 \
+            SWIFT_OPTIMIZATION_LEVEL="-Onone" || {
               echo "Build failed with exit code $?"
               exit 1
             }
@@ -143,9 +146,12 @@ jobs:
             -enableCodeCoverage YES \
             -derivedDataPath ~/Library/Developer/Xcode/DerivedData \
             -verbose \
+            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO || {
+            CODE_SIGNING_ALLOWED=NO \
+            GCC_OPTIMIZATION_LEVEL=0 \
+            SWIFT_OPTIMIZATION_LEVEL="-Onone" || {
               echo "Test failed with exit code $?"
               exit 1
             }
