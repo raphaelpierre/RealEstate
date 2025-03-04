@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -146,6 +146,7 @@
 			knownRegions = (
 				en,
 				Base,
+				fr,
 			);
 			mainGroup = 18B3D7BC2D37FAA70030C3E9;
 			minimizedProjectReferenceProxies = 1;
@@ -153,7 +154,7 @@
 				18B3D7D62D37FB610030C3E9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				18B3D81C2D380BCC0030C3E9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 56;
 			productRefGroup = 18B3D7C62D37FAA70030C3E9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
