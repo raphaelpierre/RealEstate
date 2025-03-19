@@ -35,14 +35,6 @@ struct LoginView: View {
             
             ScrollView {
                 VStack(spacing: Theme.padding * 2) {
-                    // Banner Image
-                    Image("banner")
-                        .resizable()
-                        .scaledToFit()
-                        .cornerRadius(Theme.cornerRadius)
-                        .padding(.horizontal, Theme.padding)
-                        .padding(.top, 60)
-                    
                     // Login/Register Form
                     VStack(spacing: Theme.padding) {
                         // Email Field

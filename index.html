@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealEstate App - Modern Property Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="images/logo.png" alt="RealEstate Logo">
+                <span>RealEstate</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#benefits">Benefits</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+            <div class="cta-buttons">
+                <a href="#download" class="btn btn-secondary">Download</a>
+                <a href="#contact" class="btn btn-primary">Contact Us</a>
+            </div>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+        
+        <div class="hero">
+            <div class="video-background">
+                <video autoplay loop muted playsinline>
+                    <source src="images/splash_video.mp4" type="video/mp4">
+                </video>
+                <div class="video-overlay"></div>
+            </div>
+            <div class="hero-content">
+                <h1>Manage Real Estate Properties with Ease</h1>
+                <p>A modern iOS application for browsing, managing, and selling real estate properties. Built with SwiftUI and following MVVM architecture.</p>
+                <div class="hero-cta">
+                    <a href="#download" class="btn btn-primary btn-large">
+                        <i class="fab fa-apple"></i> Download on App Store
+                    </a>
+                    <a href="demo.html" class="btn btn-secondary btn-large">Watch Demo</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="images/app-showcase.png" alt="RealEstate App Showcase">
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Discover what makes our app the perfect tool for real estate professionals and property seekers</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h3>Property Management</h3>
+                    <p>Browse properties with detailed information including price, location, and amenities. Search and filter properties by various criteria.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Multi-language Support</h3>
+                    <p>Use the app in your preferred language with support for English and French, with more languages coming soon.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h3>Currency Conversion</h3>
+                    <p>View property prices in your preferred currency with automatic conversion and formatting.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Interactive Maps</h3>
+                    <p>View property locations on interactive maps and explore neighborhoods with detailed information.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Favorites & Tracking</h3>
+                    <p>Save favorite properties and track your viewing history for easy reference later.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>User Profiles</h3>
+                    <p>Create and manage your profile with customizable preferences and settings.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Showcase Section -->
+    <section class="app-showcase">
+        <div class="container">
+            <div class="showcase-content">
+                <h2>Beautiful & Intuitive Interface</h2>
+                <p>Our app is designed with user experience in mind, featuring a clean, modern interface that makes property browsing and management a pleasure.</p>
+                
+                <ul class="showcase-features">
+                    <li><i class="fas fa-check"></i> Dark mode support</li>
+                    <li><i class="fas fa-check"></i> Responsive and adaptive UI</li>
+                    <li><i class="fas fa-check"></i> Smooth animations and transitions</li>
+                    <li><i class="fas fa-check"></i> Accessibility support</li>
+                    <li><i class="fas fa-check"></i> Dynamic type support</li>
+                </ul>
+                
+                <a href="#download" class="btn btn-primary">Download Now</a>
+            </div>
+            <div class="showcase-image">
+                <div class="device-mockup">
+                    <img src="images/app-screens.png" alt="RealEstate App Screens">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="benefits">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Choose RealEstate App?</h2>
+                <p>Our app offers unique benefits for both property buyers and sellers</p>
+            </div>
+            
+            <div class="benefits-tabs">
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-tab="buyers">For Buyers</button>
+                    <button class="tab-btn" data-tab="sellers">For Sellers</button>
+                    <button class="tab-btn" data-tab="agents">For Agents</button>
+                </div>
+                
+                <div class="tabs-content">
+                    <div class="tab-content active" id="buyers-content">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Advanced Search Filters</h3>
+                                <p>Find your dream property quickly with our powerful search filters that let you narrow down by price, location, amenities, and more.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-bookmark"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Save Favorites</h3>
+                                <p>Keep track of properties you love by saving them to your favorites for easy access later.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Price Comparison</h3>
+                                <p>Compare property prices in different areas to make informed decisions about your purchase.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="sellers-content">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Showcase Your Property</h3>
+                                <p>Upload high-quality images and detailed descriptions to make your property stand out to potential buyers.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Analytics Dashboard</h3>
+                                <p>Track views and interest in your property with our comprehensive analytics dashboard.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Direct Communication</h3>
+                                <p>Connect directly with interested buyers through our in-app messaging system.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="agents-content">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Manage Multiple Listings</h3>
+                                <p>Easily manage all your property listings in one place with our intuitive interface.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Client Management</h3>
+                                <p>Keep track of client preferences and interactions to provide better service.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <h3>Featured Listings</h3>
+                                <p>Promote your properties with featured listings that appear at the top of search results.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2>Choose Your Plan</h2>
+                <p>Select the perfect subscription plan for your real estate needs</p>
+            </div>
+            
+            <div class="pricing-toggle">
+                <span>Monthly</span>
+                <label class="switch">
+                    <input type="checkbox" id="pricing-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span>Yearly <span class="save-badge">Save 25%</span></span>
+            </div>
+            
+            <div class="pricing-cards">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Free</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">/forever</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Browse properties</li>
+                            <li><i class="fas fa-check"></i> Basic search filters</li>
+                            <li><i class="fas fa-check"></i> Save up to 5 favorites</li>
+                            <li><i class="fas fa-check"></i> Contact property owners</li>
+                            <li class="disabled"><i class="fas fa-times"></i> No advertisements</li>
+                            <li class="disabled"><i class="fas fa-times"></i> Advanced filters</li>
+                            <li class="disabled"><i class="fas fa-times"></i> Unlimited favorites</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-cta">
+                        <a href="#download" class="btn btn-secondary">Download Free</a>
+                    </div>
+                </div>
+                
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3>Premium</h3>
+                        <div class="price monthly-price">
+                            <span class="currency">$</span>
+                            <span class="amount">9.99</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <div class="price yearly-price" style="display: none;">
+                            <span class="currency">$</span>
+                            <span class="amount">89.99</span>
+                            <span class="period">/year</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> All Free features</li>
+                            <li><i class="fas fa-check"></i> No advertisements</li>
+                            <li><i class="fas fa-check"></i> Advanced search filters</li>
+                            <li><i class="fas fa-check"></i> Unlimited favorites</li>
+                            <li><i class="fas fa-check"></i> Featured placement in search</li>
+                            <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-cta">
+                        <a href="#subscribe" class="btn btn-primary">Subscribe Now</a>
+                    </div>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Lifetime</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">249.99</span>
+                            <span class="period">one-time</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> All Premium features</li>
+                            <li><i class="fas fa-check"></i> Virtual staging tools</li>
+                            <li><i class="fas fa-check"></i> Custom branding options</li>
+                            <li><i class="fas fa-check"></i> API access</li>
+                            <li><i class="fas fa-check"></i> Lifetime updates</li>
+                            <li><i class="fas fa-check"></i> VIP support</li>
+                            <li><i class="fas fa-check"></i> Early access to new features</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-cta">
+                        <a href="#subscribe" class="btn btn-secondary">Get Lifetime Access</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>What Our Users Say</h2>
+                <p>Hear from real estate professionals who use our app every day</p>
+            </div>
+            
+            <div class="testimonials-slider">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"This app has completely transformed how I manage my property listings. The interface is intuitive, and the analytics dashboard gives me valuable insights into potential buyer interest."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="images/testimonial-1.jpg" alt="Sarah Johnson">
+                        <div class="author-info">
+                            <h4>Sarah Johnson</h4>
+                            <p>Real Estate Agent, New York</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"As a property investor, I need to stay on top of the market. This app makes it easy to search for properties, compare prices, and track my favorites. The currency conversion feature is especially useful for international investments."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="images/testimonial-2.jpg" alt="Michael Chen">
+                        <div class="author-info">
+                            <h4>Michael Chen</h4>
+                            <p>Property Investor, Singapore</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"I've been using this app to find my dream home, and it's been an incredible experience. The detailed property information and high-quality images make it easy to narrow down my choices before scheduling viewings."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="images/testimonial-3.jpg" alt="Emma Rodriguez">
+                        <div class="author-info">
+                            <h4>Emma Rodriguez</h4>
+                            <p>Home Buyer, Miami</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonials-nav">
+                <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
+                <div class="dots">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+                <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq">
+        <div class="container">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+                <p>Find answers to common questions about our app</p>
+            </div>
+            
+            <div class="faq-accordion">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What platforms is the RealEstate app available on?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Currently, the RealEstate app is available for iOS devices running iOS 15.0 or later. We're working on an Android version that will be released in the near future.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How do I list my property on the app?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>To list your property, create an account and navigate to the "My Properties" section. Click on "Add New Property" and follow the step-by-step guide to enter your property details, upload photos, and set your price.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Can I use the app in languages other than English?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes, the app currently supports English and French. We're actively working on adding more languages to make the app accessible to users worldwide.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What's the difference between the free and premium versions?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>The free version allows you to browse properties, use basic search filters, save up to 5 favorites, and contact property owners. The premium version removes ads, provides advanced search filters, unlimited favorites, featured placement in search results, an analytics dashboard, and priority customer support.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How do I cancel my subscription?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>You can cancel your subscription at any time through your App Store account settings. Go to Settings > [Your Name] > Subscriptions, find the RealEstate app subscription, and tap "Cancel Subscription."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download">
+        <div class="container">
+            <div class="download-content">
+                <h2>Ready to Transform Your Real Estate Experience?</h2>
+                <p>Download the RealEstate app today and start exploring properties like never before.</p>
+                <div class="download-buttons">
+                    <a href="#" class="app-store-btn">
+                        <i class="fab fa-apple"></i>
+                        <span>
+                            <small>Download on the</small>
+                            App Store
+                        </span>
+                    </a>
+                    <a href="#" class="google-play-btn">
+                        <i class="fab fa-google-play"></i>
+                        <span>
+                            <small>GET IT ON</small>
+                            Google Play
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Get in Touch</h2>
+                <p>Have questions or feedback? We'd love to hear from you!</p>
+            </div>
+            
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email Us</h3>
+                            <p>support@realestate-app.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <div>
+                            <h3>Call Us</h3>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Visit Us</h3>
+                            <p>123 Tech Lane, San Francisco, CA 94107</p>
+                        </div>
+                    </div>
+                    
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" placeholder="Your name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Your email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" placeholder="Subject">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" placeholder="Your message"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="images/logo.png" alt="RealEstate Logo">
+                    <span>RealEstate</span>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Press</a></li>
+                            <li><a href="#">Blog</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="#">Real Estate Guide</a></li>
+                            <li><a href="#">Market Trends</a></li>
+                            <li><a href="#">Investment Tips</a></li>
+                            <li><a href="#">Property Management</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 RealEstate App. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

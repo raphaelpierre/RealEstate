@@ -115,3 +115,46 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - SwiftUI team for the amazing framework
 - Apple for providing excellent development tools
 - Contributors and maintainers of the project
+
+# RealEstate App Promotional Website
+
+This repository contains a promotional website for the RealEstate iOS app. The website showcases the app's features, benefits, and pricing plans to attract potential users.
+
+## Quick Start
+
+1. Clone this repository
+2. Open `index.html` in your web browser to view the website
+3. Check out `demo.html` to see the app's splash video in action
+
+## Features
+
+- Responsive design that works on all devices
+- Modern UI with smooth animations and transitions
+- Interactive elements (tabbed content, pricing toggle, testimonial slider, etc.)
+- Video background using the app's splash video
+- Device mockups to showcase the app
+
+## File Structure
+
+- `index.html` - Main promotional website
+- `demo.html` - Standalone demo page showcasing the app's splash video
+- `styles.css` - CSS styles for the website
+- `script.js` - JavaScript for interactive elements
+- `images/` - Directory containing app assets
+  - `logo.png` - App icon
+  - `app-showcase.png` - Banner image
+  - `app-screens.png` - App screenshots
+  - `splash_video.mp4` - App splash video
+  - `testimonial-*.jpg` - Testimonial profile pictures
+
+## Using App Assets
+
+This website uses assets directly from the RealEstate iOS app to maintain brand consistency. The assets were extracted from the app's Assets.xcassets folder.
+
+## Customization
+
+For detailed customization instructions, see `website-README.md`.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

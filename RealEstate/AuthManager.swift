@@ -223,6 +223,9 @@ final class AuthManager: ObservableObject {
             if let gidError = error as? GIDSignInError {
                 print("GIDSignIn error code: \(gidError.code)")
                 switch gidError.code {
+                case .canceled:
+                    print("Sign-in canceled")
+                    throw AuthError.userNotAuthenticated
                 case .hasNoAuthInKeychain:
                     print("No auth in keychain")
                     throw AuthError.noClientId
@@ -232,6 +235,15 @@ final class AuthManager: ObservableObject {
                 case .keychain:
                     print("Keychain error")
                     throw AuthError.keychain
+                case .EMM:
+                    print("EMM error")
+                    throw AuthError.unknown
+                case .scopesAlreadyGranted:
+                    print("Scopes already granted")
+                    throw AuthError.unknown
+                case .mismatchWithCurrentUser:
+                    print("Mismatch with current user")
+                    throw AuthError.userNotAuthenticated
                 @unknown default:
                     print("Unknown error code")
                     throw AuthError.unknown
@@ -246,142 +258,24 @@ final class AuthManager: ObservableObject {
                     throw AuthError.noClientId
                 case .networkError:
                     throw AuthError.networkError
+                case .userNotFound:
+                    throw AuthError.userNotFound
+                case .wrongPassword:
+                    throw AuthError.wrongPassword
+                case .emailAlreadyInUse:
+                    throw AuthError.emailAlreadyInUse
+                case .weakPassword:
+                    throw AuthError.weakPassword
+                case .invalidEmail:
+                    throw AuthError.invalidEmail
                 case .userDisabled:
                     throw AuthError.userDisabled
-                case .invalidEmail:
-                    throw AuthError.userNotAuthenticated
-                case .wrongPassword:
-                    throw AuthError.userNotAuthenticated
-                case .userNotFound:
-                    throw AuthError.userNotAuthenticated
-                case .accountExistsWithDifferentCredential:
-                    throw AuthError.userNotAuthenticated
-                case .requiresRecentLogin:
-                    throw AuthError.userNotAuthenticated
-                case .providerAlreadyLinked:
-                    throw AuthError.userNotAuthenticated
-                case .noSuchProvider:
-                    throw AuthError.userNotAuthenticated
-                case .invalidCredential:
-                    throw AuthError.userNotAuthenticated
-                case .invalidUserToken:
-                    throw AuthError.userNotAuthenticated
-                case .tooManyRequests:
-                    throw AuthError.networkError
                 case .operationNotAllowed:
-                    throw AuthError.userNotAuthenticated
-                case .emailAlreadyInUse:
-                    throw AuthError.userNotAuthenticated
-                case .weakPassword:
-                    throw AuthError.userNotAuthenticated
-                case .appNotAuthorized:
-                    throw AuthError.noClientId
-                case .expiredActionCode:
-                    throw AuthError.userNotAuthenticated
-                case .invalidActionCode:
-                    throw AuthError.userNotAuthenticated
-                case .invalidMessagePayload:
-                    throw AuthError.userNotAuthenticated
-                case .invalidSender:
-                    throw AuthError.userNotAuthenticated
-                case .invalidRecipientEmail:
-                    throw AuthError.userNotAuthenticated
-                case .missingEmail:
-                    throw AuthError.userNotAuthenticated
-                case .missingIosBundleID:
-                    throw AuthError.noClientId
-                case .missingAndroidPackageName:
-                    throw AuthError.noClientId
-                case .unauthorizedDomain:
-                    throw AuthError.noClientId
-                case .invalidContinueURI:
-                    throw AuthError.noClientId
-                case .missingContinueURI:
-                    throw AuthError.noClientId
-                case .missingPhoneNumber:
-                    throw AuthError.userNotAuthenticated
-                case .invalidPhoneNumber:
-                    throw AuthError.userNotAuthenticated
-                case .missingVerificationCode:
-                    throw AuthError.userNotAuthenticated
-                case .invalidVerificationCode:
-                    throw AuthError.userNotAuthenticated
-                case .missingVerificationID:
-                    throw AuthError.userNotAuthenticated
-                case .invalidVerificationID:
-                    throw AuthError.userNotAuthenticated
-                case .missingAppCredential:
-                    throw AuthError.noClientId
-                case .invalidAppCredential:
-                    throw AuthError.noClientId
-                case .sessionExpired:
-                    throw AuthError.userNotAuthenticated
-                case .quotaExceeded:
-                    throw AuthError.networkError
-                case .keychainError:
-                    throw AuthError.keychain
-                case .internalError:
-                    throw AuthError.unknown
-                case .invalidCustomToken:
-                    throw AuthError.userNotAuthenticated
-                case .customTokenMismatch:
-                    throw AuthError.userNotAuthenticated
-                case .captchaCheckFailed:
-                    throw AuthError.userNotAuthenticated
-                case .webContextAlreadyPresented:
-                    throw AuthError.userNotAuthenticated
-                case .webContextCancelled:
-                    throw AuthError.userNotAuthenticated
-                case .appVerificationUserInteractionFailure:
-                    throw AuthError.userNotAuthenticated
-                case .invalidClientID:
-                    throw AuthError.noClientId
-                case .webNetworkRequestFailed:
-                    throw AuthError.networkError
-                case .webSignInUserInteractionFailure:
-                    throw AuthError.userNotAuthenticated
-                case .localPlayerNotAuthenticated:
-                    throw AuthError.userNotAuthenticated
-                case .nullUser:
-                    throw AuthError.userNotAuthenticated
-                case .dynamicLinkNotActivated:
-                    throw AuthError.userNotAuthenticated
-                case .invalidProviderID:
-                    throw AuthError.userNotAuthenticated
-                case .tenantIDMismatch:
-                    throw AuthError.userNotAuthenticated
-                case .unsupportedTenantOperation:
-                    throw AuthError.userNotAuthenticated
-                case .invalidDynamicLinkDomain:
-                    throw AuthError.noClientId
-                case .rejectedCredential:
-                    throw AuthError.userNotAuthenticated
-                case .gameKitNotLinked:
-                    throw AuthError.userNotAuthenticated
-                case .secondFactorRequired:
-                    throw AuthError.userNotAuthenticated
-                case .missingMultiFactorSession:
-                    throw AuthError.userNotAuthenticated
-                case .missingMultiFactorInfo:
-                    throw AuthError.userNotAuthenticated
-                case .invalidMultiFactorSession:
-                    throw AuthError.userNotAuthenticated
-                case .multiFactorInfoNotFound:
-                    throw AuthError.userNotAuthenticated
-                case .adminRestrictedOperation:
-                    throw AuthError.adminRequired
-                case .unverifiedEmail:
-                    throw AuthError.userNotAuthenticated
-                case .secondFactorAlreadyEnrolled:
-                    throw AuthError.userNotAuthenticated
-                case .maximumSecondFactorCountExceeded:
-                    throw AuthError.userNotAuthenticated
-                case .unsupportedFirstFactor:
-                    throw AuthError.userNotAuthenticated
-                case .emailChangeNeedsVerification:
-                    throw AuthError.userNotAuthenticated
-                case .missingOrInvalidNonce:
-                    throw AuthError.userNotAuthenticated
+                    throw AuthError.operationNotAllowed
+                case .tooManyRequests:
+                    throw AuthError.tooManyRequests
+                case .requiresRecentLogin:
+                    throw AuthError.requiresRecentLogin
                 @unknown default:
                     throw AuthError.unknown
                 }
@@ -401,6 +295,14 @@ enum AuthError: LocalizedError {
     case keychain
     case networkError
     case userDisabled
+    case userNotFound
+    case wrongPassword
+    case emailAlreadyInUse
+    case weakPassword
+    case invalidEmail
+    case operationNotAllowed
+    case tooManyRequests
+    case requiresRecentLogin
     
     var errorDescription: String? {
         switch self {
@@ -420,6 +322,22 @@ enum AuthError: LocalizedError {
             return "Network error. Please check your internet connection."
         case .userDisabled:
             return "This account has been disabled. Please contact support."
+        case .userNotFound:
+            return "No user found with this email address."
+        case .wrongPassword:
+            return "Incorrect password. Please try again."
+        case .emailAlreadyInUse:
+            return "An account with this email already exists."
+        case .weakPassword:
+            return "Password is too weak. Please use a stronger password."
+        case .invalidEmail:
+            return "Please enter a valid email address."
+        case .operationNotAllowed:
+            return "This operation is not allowed."
+        case .tooManyRequests:
+            return "Too many attempts. Please try again later."
+        case .requiresRecentLogin:
+            return "Please log in again to perform this action."
         }
     }
 }

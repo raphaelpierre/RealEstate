@@ -13,6 +13,7 @@ struct PropertyDetailView: View {
     @State private var currentProperty: Property
     @State private var isFavoriteProcessing = false
     @State private var isFavorite = false
+    @State private var showOrangeMoneyPayment = false
     
     init(property: Property) {
         self.property = property
@@ -119,7 +120,7 @@ struct PropertyDetailView: View {
     private var contactSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: "message")
+                Image(systemName: "phone.circle.fill")
                     .font(.system(size: 24))
                     .foregroundColor(Theme.primaryRed)
                 
@@ -128,20 +129,46 @@ struct PropertyDetailView: View {
                     .foregroundColor(Theme.textWhite)
             }
             
+            // WhatsApp Contact
             if !currentProperty.contact.whatsapp.isEmpty {
-                Button(action: openWhatsApp) {
-                    HStack {
-                        Image(systemName: "message.fill")
-                            .font(.system(size: 20))
-                        Text("contact_agent".localized)
-                            .font(.system(size: 16, weight: .medium))
+                Button {
+                    if let whatsappURL = URL(string: "https://wa.me/\(currentProperty.contact.whatsapp)") {
+                        UIApplication.shared.open(whatsappURL)
                     }
-                    .foregroundColor(Theme.textWhite)
+                } label: {
+                    HStack {
+                        Image("whatsapp_icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                        Text("contact_whatsapp".localized)
+                            .font(.system(size: 16))
+                    }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Theme.primaryRed)
-                    .cornerRadius(8)
+                    .padding()
+                    .background(Theme.cardBackground)
+                    .cornerRadius(12)
+                    .foregroundColor(Theme.textWhite)
                 }
+            }
+            
+            // Orange Money Payment Button
+            Button {
+                showOrangeMoneyPayment = true
+            } label: {
+                HStack {
+                    Image("orange_money_icon") // Vous devrez ajouter cette image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                    Text("pay_with_orange_money".localized)
+                        .font(.system(size: 16))
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Theme.primaryRed)
+                .cornerRadius(12)
+                .foregroundColor(.white)
             }
         }
         .padding()
@@ -194,10 +221,74 @@ struct PropertyDetailView: View {
                                     .foregroundColor(Theme.textWhite)
                             }
                             
-                            HStack(spacing: 16) {
-                                PropertyFeature(icon: "bed.double", value: "\(currentProperty.bedrooms)")
-                                PropertyFeature(icon: "shower", value: "\(currentProperty.bathrooms)")
-                                PropertyFeature(icon: "ruler", value: "\(Int(currentProperty.area))m²")
+                            if currentProperty.type.lowercased() == "land" {
+                                VStack(spacing: 16) {
+                                    // Total Area
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "ruler.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Theme.primaryRed)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("total_area".localized)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(Theme.textWhite.opacity(0.7))
+                                            Text("\(Int(currentProperty.area))m²")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Theme.textWhite)
+                                        }
+                                    }
+                                    
+                                    // Buildable Area
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "building.2.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Theme.primaryRed)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("buildable_area".localized)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(Theme.textWhite.opacity(0.7))
+                                            Text("\(Int(currentProperty.area * currentProperty.buildableAreaPercentage / 100))m²")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Theme.textWhite)
+                                        }
+                                    }
+                                    
+                                    // Buildable Area Percentage
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "percent")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Theme.primaryRed)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("buildable_area_percentage".localized)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(Theme.textWhite.opacity(0.7))
+                                            Text("\(Int(currentProperty.buildableAreaPercentage))%")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Theme.textWhite)
+                                        }
+                                    }
+                                    
+                                    // Purpose
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "tag.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Theme.primaryRed)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("purpose".localized)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(Theme.textWhite.opacity(0.7))
+                                            Text(currentProperty.purpose.localized)
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Theme.textWhite)
+                                        }
+                                    }
+                                }
+                            } else {
+                                HStack(spacing: 16) {
+                                    PropertyFeature(icon: "bed.double", value: "\(currentProperty.bedrooms)")
+                                    PropertyFeature(icon: "shower", value: "\(currentProperty.bathrooms)")
+                                    PropertyFeature(icon: "ruler", value: "\(Int(currentProperty.area))m²")
+                                }
                             }
                         }
                         .padding()
@@ -248,6 +339,12 @@ struct PropertyDetailView: View {
             Button("OK") { }
         } message: {
             Text(errorMessage)
+        }
+        .sheet(isPresented: $showOrangeMoneyPayment) {
+            OrangeMoneyPaymentView(
+                property: currentProperty,
+                amount: currentProperty.price
+            )
         }
     }
 }

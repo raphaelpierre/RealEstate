@@ -28,6 +28,7 @@
 "bedrooms" = "Chambres";
 "bathrooms" = "Salles de bain";
 "area" = "Superficie";
+"buildable_area_percentage" = "Pourcentage de zone constructible";
 "address" = "Adresse";
 "description" = "Description";
 "contact" = "Contact";
@@ -376,4 +377,20 @@
 "unknown_error" = "Une erreur inconnue s'est produite";
 
 // New language restart message
-"language_restart_message" = "Veuillez redémarrer l'application pour voir les changements de langue"; 
+"language_restart_message" = "Veuillez redémarrer l'application pour voir les changements de langue";
+
+// New translations from the code block
+"pay_with_orange_money" = "Payer avec Orange Money";
+"orange_money_payment" = "Paiement Orange Money";
+"orange_money_number" = "Numéro Orange Money";
+"confirm_payment" = "Confirmer le paiement";
+"payment_success" = "Paiement effectué avec succès";
+"invalid_phone_number" = "Numéro de téléphone invalide";
+"insufficient_funds" = "Solde insuffisant";
+"enter_phone_number" = "Entrez votre numéro Orange Money";
+"phone_number_placeholder" = "+XXX XXXXXXXX";
+"continue" = "Continuer";
+"processing_payment" = "Traitement du paiement...";
+"payment_successful" = "Paiement réussi";
+"payment_failed" = "Échec du paiement";
+"try_again" = "Réessayer"; 

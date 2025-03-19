@@ -70,10 +70,17 @@ struct LocalizedPropertyDetailView: View {
                             .font(.headline)
                             .foregroundColor(Theme.textWhite)
                         
-                        HStack(spacing: 20) {
-                            DetailItem(icon: "bed.double.fill", value: "\(property.bedrooms) \("bedrooms".localized)")
-                            DetailItem(icon: "shower.fill", value: "\(property.bathrooms) \("bathrooms".localized)")
-                            DetailItem(icon: "square.fill", value: LocalizationManager.shared.formatArea(property.area))
+                        if property.type.lowercased() == "land" {
+                            HStack(spacing: 20) {
+                                DetailItem(icon: "square.fill", value: LocalizationManager.shared.formatArea(property.area))
+                                DetailItem(icon: "percent", value: "\(Int(property.buildableAreaPercentage))%")
+                            }
+                        } else {
+                            HStack(spacing: 20) {
+                                DetailItem(icon: "bed.double.fill", value: "\(property.bedrooms) \("bedrooms".localized)")
+                                DetailItem(icon: "shower.fill", value: "\(property.bathrooms) \("bathrooms".localized)")
+                                DetailItem(icon: "square.fill", value: LocalizationManager.shared.formatArea(property.area))
+                            }
                         }
                         
                         HStack(spacing: 20) {

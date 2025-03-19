@@ -191,7 +191,7 @@ struct LandingView: View {
         var body: some View {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(Theme.textWhite.opacity(0.6))
+                    .foregroundColor(Theme.primaryRed)
                 TextField("search_properties".localized, text: $searchText)
                     .foregroundColor(Theme.textWhite)
                     .accentColor(Theme.primaryRed)
@@ -201,12 +201,16 @@ struct LandingView: View {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(Theme.textWhite.opacity(0.6))
+                            .foregroundColor(Theme.primaryRed)
                     }
                 }
             }
             .padding()
-            .background(Color.black.opacity(0.3))
+            .background(Theme.cardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Theme.primaryRed.opacity(0.3), lineWidth: 1)
+            )
             .cornerRadius(10)
             .id(localizationManager.refreshToggle)
         }
@@ -249,13 +253,13 @@ struct LandingView: View {
                         .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                .fill(selectedPropertyType != .all ? Theme.primaryRed.opacity(0.2) : Theme.cardBackground)
+                                .fill(selectedPropertyType != .all ? Theme.primaryRed : Theme.cardBackground)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                        .stroke(selectedPropertyType != .all ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                        .stroke(Theme.primaryRed, lineWidth: 1)
                                 )
                         )
-                        .foregroundColor(selectedPropertyType != .all ? Theme.primaryRed : Theme.textWhite)
+                        .foregroundColor(selectedPropertyType != .all ? Theme.textWhite : Theme.primaryRed)
                     }
                     .id(localizationManager.refreshToggle)
                     
@@ -284,13 +288,13 @@ struct LandingView: View {
                         .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                .fill(selectedPurpose != .all ? Theme.primaryRed.opacity(0.2) : Theme.cardBackground)
+                                .fill(selectedPurpose != .all ? Theme.primaryRed : Theme.cardBackground)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                        .stroke(selectedPurpose != .all ? Theme.primaryRed : Color.clear, lineWidth: 1)
+                                        .stroke(Theme.primaryRed, lineWidth: 1)
                                 )
                         )
-                        .foregroundColor(selectedPurpose != .all ? Theme.primaryRed : Theme.textWhite)
+                        .foregroundColor(selectedPurpose != .all ? Theme.textWhite : Theme.primaryRed)
                     }
                     .id(localizationManager.refreshToggle)
                     
@@ -300,7 +304,9 @@ struct LandingView: View {
                     } label: {
                         HStack {
                             Image(systemName: "slider.horizontal.3")
+                                .foregroundColor(Theme.primaryRed)
                             Text("more_filters".localized)
+                                .foregroundColor(Theme.primaryRed)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -309,13 +315,11 @@ struct LandingView: View {
                                 .fill(Theme.cardBackground)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                                        .stroke(Theme.primaryRed.opacity(0.3), lineWidth: 1)
+                                        .stroke(Theme.primaryRed, lineWidth: 1)
                                 )
                         )
-                        .foregroundColor(Theme.textWhite)
                     }
                     .id(localizationManager.refreshToggle)
-                    .id(currencyManager.refreshToggle)
                 }
                 .padding(.horizontal)
             }
@@ -328,24 +332,11 @@ struct LandingView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Banner Image
-                Image("banner")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 90)
-                    .clipped()
-                    .overlay(
-                        // Light gradient overlay to enhance image appearance
-                        LinearGradient(
-                            gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .id(localizationManager.refreshToggle)
+                AppBanner()
+                    .padding(.top, 4)
                 
                 // Fixed Hero Section with Search and Filter Bar
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     SearchBarView(searchText: $searchText)
                         .padding(.horizontal)
                     
@@ -356,7 +347,7 @@ struct LandingView: View {
                         showingFilters: $showingFilters
                     )
                 }
-                .padding(.vertical)
+                .padding(.vertical, 8)
                 .background(Theme.backgroundBlack)
                 .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
                 

@@ -37,6 +37,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
     var bedrooms: Int
     var bathrooms: Int
     var area: Double
+    var buildableAreaPercentage: Double
     var type: String
     var purpose: String
     var imageURLs: [String]
@@ -59,6 +60,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
          bedrooms: Int,
          bathrooms: Int,
          area: Double,
+         buildableAreaPercentage: Double = 100.0,
          type: String = "House",
          purpose: String = "Buy",
          imageURLs: [String] = [],
@@ -80,6 +82,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
         self.bedrooms = bedrooms
         self.bathrooms = bathrooms
         self.area = area
+        self.buildableAreaPercentage = buildableAreaPercentage
         self.type = type
         self.purpose = purpose
         self.imageURLs = imageURLs
@@ -105,6 +108,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
                lhs.bedrooms == rhs.bedrooms &&
                lhs.bathrooms == rhs.bathrooms &&
                lhs.area == rhs.area &&
+               lhs.buildableAreaPercentage == rhs.buildableAreaPercentage &&
                lhs.type == rhs.type &&
                lhs.purpose == rhs.purpose &&
                lhs.imageURLs == rhs.imageURLs &&
@@ -137,6 +141,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
             bedrooms: data["bedrooms"] as? Int ?? 0,
             bathrooms: data["bathrooms"] as? Int ?? 0,
             area: data["area"] as? Double ?? 0.0,
+            buildableAreaPercentage: data["buildableAreaPercentage"] as? Double ?? 100.0,
             type: data["type"] as? String ?? "House",
             purpose: data["purpose"] as? String ?? "Buy",
             imageURLs: data["imageURLs"] as? [String] ?? [],
@@ -161,6 +166,7 @@ struct Property: Identifiable, Codable, Equatable, Hashable {
             "bedrooms": bedrooms,
             "bathrooms": bathrooms,
             "area": area,
+            "buildableAreaPercentage": buildableAreaPercentage,
             "type": type,
             "purpose": purpose,
             "imageURLs": imageURLs,
@@ -187,6 +193,7 @@ extension Property {
         bedrooms: 4,
         bathrooms: 3,
         area: 3500,
+        buildableAreaPercentage: 80.0,
         type: "Villa",
         purpose: "Rent",
         imageURLs: [],

@@ -5,6 +5,7 @@ enum Theme {
     static let primaryBlue = Color("PrimaryBlue")
     static let backgroundBlack = Color("BackgroundBlack")
     static let textWhite = Color.white
+    static let textGray = Color.gray
     static let cardBackground = Color("CardBackground")
     
     static let cornerRadius: CGFloat = 12

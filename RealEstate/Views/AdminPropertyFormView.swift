@@ -45,6 +45,7 @@ struct AdminPropertyFormView: View {
     @State private var imageURLs: [String]
     @State private var newImageData: [Data] = []
     @State private var contactWhatsapp: String = ""
+    @State private var buildableAreaPercentage: Double
     
     private let maxImages = 10
     private var steps: [String] {
@@ -74,6 +75,7 @@ struct AdminPropertyFormView: View {
         _bedrooms = State(initialValue: property?.bedrooms ?? 0)
         _bathrooms = State(initialValue: property?.bathrooms ?? 0)
         _area = State(initialValue: property?.area ?? 0.0)
+        _buildableAreaPercentage = State(initialValue: property?.buildableAreaPercentage ?? 100.0)
         _address = State(initialValue: property?.address ?? "")
         _city = State(initialValue: property?.city ?? "")
         _zipCode = State(initialValue: property?.zipCode ?? "")
@@ -115,6 +117,7 @@ struct AdminPropertyFormView: View {
                         bedrooms: $bedrooms,
                         bathrooms: $bathrooms,
                         area: $area,
+                        buildableAreaPercentage: $buildableAreaPercentage,
                         imageURLs: $imageURLs,
                         newImageData: $newImageData,
                         selectedImages: $selectedImages,
@@ -212,6 +215,8 @@ struct AdminPropertyFormView: View {
             PropertyDetailView(property: property)
                 .environmentObject(localizationManager)
                 .environmentObject(currencyManager)
+                .environmentObject(firebaseManager)
+                .environmentObject(authManager)
         }
         .task {
             await loadPropertyData()
@@ -275,6 +280,7 @@ struct AdminPropertyFormView: View {
                 bedrooms = updatedProperty.bedrooms
                 bathrooms = updatedProperty.bathrooms
                 area = updatedProperty.area
+                buildableAreaPercentage = updatedProperty.buildableAreaPercentage
                 selectedType = PropertyType(rawValue: updatedProperty.type) ?? .house
                 selectedPurpose = PropertyPurpose(rawValue: updatedProperty.purpose) ?? .buy
                 imageURLs = updatedProperty.imageURLs
@@ -335,6 +341,7 @@ struct AdminPropertyFormView: View {
             bedrooms: bedrooms,
             bathrooms: bathrooms,
             area: area,
+            buildableAreaPercentage: buildableAreaPercentage,
             type: selectedType.rawValue,
             purpose: selectedPurpose.rawValue,
                 imageURLs: finalImageURLs, // Use the updated image URLs
@@ -686,27 +693,40 @@ private struct DetailsView: View {
     @Binding var bedrooms: Int
     @Binding var bathrooms: Int
     @Binding var area: Double
-    
+    @Binding var buildableAreaPercentage: Double
+    @Binding var selectedType: PropertyType
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                NumericFormField(
-                    "bedrooms".localized,
-                    value: $bedrooms,
-                    icon: "bed.double.fill"
-                )
-                
-                NumericFormField(
-                    "bathrooms".localized,
-                    value: $bathrooms,
-                    icon: "shower.fill"
-                )
-                
                 NumericFormField(
                     "area".localized,
                     value: $area,
                     icon: "square.fill"
                 )
+                
+                if selectedType == .land {
+                    NumericFormField(
+                        "buildable_area_percentage".localized,
+                        value: Binding(
+                            get: { buildableAreaPercentage },
+                            set: { buildableAreaPercentage = min(max($0, 0), 100) }
+                        ),
+                        icon: "percent"
+                    )
+                } else {
+                    NumericFormField(
+                        "bedrooms".localized,
+                        value: $bedrooms,
+                        icon: "bed.double.fill"
+                    )
+                    
+                    NumericFormField(
+                        "bathrooms".localized,
+                        value: $bathrooms,
+                        icon: "shower.fill"
+                    )
+                }
             }
             .padding()
         }
@@ -940,6 +960,7 @@ private struct MainContentView: View {
     @Binding var bedrooms: Int
     @Binding var bathrooms: Int
     @Binding var area: Double
+    @Binding var buildableAreaPercentage: Double
     @Binding var imageURLs: [String]
     @Binding var newImageData: [Data]
     @Binding var selectedImages: [PhotosPickerItem]
@@ -970,7 +991,9 @@ private struct MainContentView: View {
             DetailsView(
                 bedrooms: $bedrooms,
                 bathrooms: $bathrooms,
-                area: $area
+                area: $area,
+                buildableAreaPercentage: $buildableAreaPercentage,
+                selectedType: $selectedType
             )
             .tag(2)
             

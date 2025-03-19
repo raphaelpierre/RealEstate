@@ -211,6 +211,7 @@ class FirebaseManager: ObservableObject {
                 try await favoriteRef.delete()
                 favoritePropertyIds.remove(property.id)
             } else {
+                // Create the data dictionary on the main actor
                 let data: [String: Any] = [
                     "propertyId": property.id,
                     "addedAt": FieldValue.serverTimestamp(),
@@ -224,6 +225,8 @@ class FirebaseManager: ObservableObject {
                     "area": property.area,
                     "updatedAt": FieldValue.serverTimestamp()
                 ]
+                
+                // Use the data dictionary in the async context
                 try await favoriteRef.setData(data)
                 favoritePropertyIds.insert(property.id)
             }
@@ -500,6 +503,37 @@ class FirebaseManager: ObservableObject {
         for document in snapshot.documents {
             try await document.reference.delete()
         }
+    }
+    
+    // MARK: - Orange Money Transactions
+    
+    @MainActor
+    func saveOrangeMoneyTransaction(_ transaction: OrangeMoneyTransaction) async throws {
+        let docRef = db.collection("transactions").document(transaction.id)
+        let encodedTransaction = try Firestore.Encoder().encode(transaction)
+        try await docRef.setData(encodedTransaction)
+    }
+    
+    @MainActor
+    func getOrangeMoneyTransaction(id: String) async throws -> OrangeMoneyTransaction {
+        let document = try await db.collection("transactions").document(id).getDocument()
+        guard let transaction = try? document.data(as: OrangeMoneyTransaction.self) else {
+            throw NSError(
+                domain: "FirebaseManager",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to load transaction with ID: \(id)"]
+            )
+        }
+        return transaction
+    }
+    
+    @MainActor
+    func updateOrangeMoneyTransactionStatus(id: String, status: TransactionStatus) async throws {
+        let docRef = db.collection("transactions").document(id)
+        try await docRef.updateData([
+            "status": status.rawValue,
+            "updatedAt": FieldValue.serverTimestamp()
+        ])
     }
 }
 

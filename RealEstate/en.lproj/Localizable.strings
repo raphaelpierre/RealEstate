@@ -275,4 +275,33 @@
 "unknown_error" = "An unknown error occurred";
 
 // New string for language change restart message
-"language_restart_message" = "Please restart the application to see the language changes"; 
+"language_restart_message" = "Please restart the application to see the language changes";
+
+// Property Details
+"property_details" = "Property Details";
+"price" = "Price";
+"bedrooms" = "Bedrooms";
+"bathrooms" = "Bathrooms";
+"area" = "Area";
+"buildable_area_percentage" = "Buildable Area Percentage";
+"address" = "Address";
+"description" = "Description";
+"contact" = "Contact";
+
+// New translations
+"pay_with_orange_money" = "Pay with Orange Money";
+"orange_money_payment" = "Orange Money Payment";
+"orange_money_number" = "Orange Money Number";
+"confirm_payment" = "Confirm Payment";
+"payment_success" = "Payment successful";
+"invalid_phone_number" = "Invalid phone number";
+"insufficient_funds" = "Insufficient funds";
+"network_error" = "Network error";
+"enter_phone_number" = "Enter your Orange Money number";
+"phone_number_placeholder" = "+XXX XXXXXXXX";
+"continue" = "Continue";
+"processing_payment" = "Processing payment...";
+"payment_successful" = "Payment successful";
+"payment_failed" = "Payment failed";
+"try_again" = "Try again";
+"confirm_payment" = "Confirm payment"; 
